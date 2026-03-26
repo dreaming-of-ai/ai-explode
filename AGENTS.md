@@ -17,10 +17,10 @@ Agents must preserve a strict separation between backend and frontend and follow
 
 For feature work in `ai-explode`, follow this sequence unless explicitly instructed otherwise:
 
-1. Use the `specification-writer` skill to create or refine the feature specification.
-2. Use the `implementation-plan-writer` skill to derive a structured implementation plan.
-3. Use the `implementation-executor` skill only after specification and plan exist.
-4. Before commit, use the `review` skill to review the current uncommitted changes only.
+1. Use the `.agents/skills/specification-writer` skill to create or refine the feature specification.
+2. Use the `.agents/skills/implementation-plan-writer` skill to derive a structured implementation plan.
+3. Use the `.agents/skills/implementation-executor` skill only after specification and plan exist.
+4. Before commit, use the `.agents/skills/review` skill to review the current uncommitted changes only.
 
 Do not implement directly from a vague request when specification and planning are still missing.
 
@@ -29,7 +29,7 @@ Do not implement directly from a vague request when specification and planning a
 ## Feature documentation
 
 All feature specifications and implementation plans must be managed under `papers`.
-Additionally, screenshots of the feature in action are placed under `papers/screenshots`.
+Additionally, screenshots of the feature in action are placed under `papers/done/screenshots`.
 
 ### Directory structure
 
@@ -228,6 +228,6 @@ When responding to implementation tasks:
 ## Learnings
 
 - Whenever you have learned something important on the system architecture, design patterns, or domain that might be
-  relevant for future tasks add this to the `.agents/LEARNINGS.md` file.
+  relevant for future tasks add this to the `LEARNINGS.md` file.
 
 - Use the learnings to improve your future implementations and to avoid making the same mistakes again.

@@ -21,11 +21,8 @@ const emit = defineEmits<{
 <template>
   <section class="setup-card panel">
     <div class="section-header">
-      <p class="eyebrow">Phase 1</p>
-      <h2>Assemble the player lineup</h2>
-      <p class="lede">
-        Set up two to four commanders, lock in unique colors, and launch the first playable board.
-      </p>
+      <p class="eyebrow">New Game</p>
+      <h3>Players Assemble</h3>
     </div>
 
     <div class="setup-grid">
@@ -37,7 +34,7 @@ const emit = defineEmits<{
         <div class="player-card__top">
           <div>
             <p class="player-label">Player {{ index + 1 }}</p>
-            <h3>Ready for orbit</h3>
+            <h4>Ready for orbit</h4>
           </div>
 
           <button
@@ -127,12 +124,15 @@ const emit = defineEmits<{
 <style scoped>
 .setup-card {
   display: grid;
-  gap: 1.75rem;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 1rem;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .section-header {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.4rem;
 }
 
 .eyebrow {
@@ -143,23 +143,18 @@ const emit = defineEmits<{
   text-transform: uppercase;
 }
 
-h2 {
+h3 {
   margin: 0;
-  font-size: clamp(2rem, 3vw, 2.8rem);
+  font-size: clamp(1.5rem, 2.2vw, 2.1rem);
   line-height: 1;
-}
-
-.lede {
-  margin: 0;
-  max-width: 38rem;
-  color: var(--text-soft);
-  font-size: 1.02rem;
-  line-height: 1.6;
 }
 
 .setup-grid {
   display: grid;
   gap: 1rem;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 0.25rem;
 }
 
 .player-card {
@@ -188,7 +183,7 @@ h2 {
   text-transform: uppercase;
 }
 
-h3 {
+h4 {
   margin: 0;
   font-size: 1.15rem;
 }
@@ -267,6 +262,10 @@ input:focus {
   flex-wrap: wrap;
   gap: 0.9rem;
   justify-content: space-between;
+  position: sticky;
+  bottom: 0;
+  padding-top: 0.85rem;
+  background: linear-gradient(180deg, rgba(8, 13, 29, 0), rgba(8, 13, 29, 0.96) 34%);
 }
 
 .primary-button,
@@ -322,6 +321,7 @@ input:focus {
   margin: 0;
   padding-left: 1.1rem;
   color: #ffb6bc;
+  background: rgba(8, 13, 29, 0.96);
 }
 
 @media (max-width: 840px) {

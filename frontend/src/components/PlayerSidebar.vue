@@ -1,17 +1,31 @@
 <script setup lang="ts">
-import type { PlayerConfig, ScoreboardEntry } from '@/types/game'
+import type { GamePhase, PlayerConfig, ScoreboardEntry } from '@/types/game'
 
 defineProps<{
   entries: ScoreboardEntry[]
   activePlayer: PlayerConfig | null
   round: number
+  phase: GamePhase
+}>()
+
+const emit = defineEmits<{
+  (event: 'new-game'): void
 }>()
 </script>
 
 <template>
   <aside class="sidebar">
+    <button
+      class="sidebar-action"
+      type="button"
+      @click="emit('new-game')"
+    >
+      <span>New Game</span>
+      <small>Open setup without dropping the current match.</small>
+    </button>
+
     <section
-      v-if="activePlayer"
+      v-if="phase === 'playing' && activePlayer"
       class="turn-card panel"
       :style="{
         '--active-primary': activePlayer.color.primary,
@@ -21,24 +35,28 @@ defineProps<{
     >
       <p class="eyebrow">Current Turn</p>
       <h2>{{ activePlayer.name }}</h2>
-      <p class="turn-meta">
-        Round {{ round }} · {{ activePlayer.color.name }}
-      </p>
-      <div class="turn-badge">
-        <span>{{ activePlayer.initials }}</span>
-      </div>
+      <p class="turn-meta">Round {{ round }}</p>
     </section>
 
     <section class="score-card panel">
       <div class="score-header">
         <div>
-          <p class="eyebrow">Scoreboard</p>
-          <h3>Occupied fields</h3>
+          <p class="eyebrow">{{ phase === 'playing' ? 'Scoreboard' : 'Rules in this increment' }}</p>
+          <h3>{{ phase === 'playing' ? 'Occupied fields' : 'Current shell behavior' }}</h3>
         </div>
-        <p class="score-note">Updates after every valid move.</p>
+        <p class="score-note">
+          {{
+            phase === 'playing'
+              ? 'Updates after every valid move.'
+              : 'Current progress: board-first shell, modal setup, guarded restart, and turn rotation.'
+          }}
+        </p>
       </div>
 
-      <ul class="score-list">
+      <ul
+        v-if="phase === 'playing'"
+        class="score-list"
+      >
         <li
           v-for="entry in entries"
           :key="entry.player.id"
@@ -61,25 +79,76 @@ defineProps<{
           <strong>{{ entry.fields }}</strong>
         </li>
       </ul>
+
+      <ul
+        v-else
+        class="rule-list"
+      >
+        <li>Board loads immediately and stays visible before the first match.</li>
+        <li>New Game opens modal setup instead of replacing the whole screen.</li>
+        <li>Claim empty cells, reinforce your own cells, and watch turns rotate automatically.</li>
+      </ul>
     </section>
   </aside>
 </template>
 
 <style scoped>
 .sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.9rem;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar-action {
+  order: 1;
+  inline-size: 100%;
+  margin-top: 4px;
   display: grid;
-  gap: 1rem;
+  gap: 0.12rem;
+  justify-items: start;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(109, 231, 255, 0.22);
+  border-radius: 1rem;
+  background:
+    linear-gradient(135deg, rgba(20, 33, 63, 0.96), rgba(8, 14, 30, 0.92)),
+    rgba(7, 14, 31, 0.78);
+  color: var(--text-main);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.sidebar-action span {
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.sidebar-action small {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+}
+
+.sidebar-action:hover {
+  transform: translateY(-1px);
+  border-color: rgba(109, 231, 255, 0.38);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
 }
 
 .turn-card {
   --active-primary: var(--accent);
   --active-light: rgba(109, 231, 255, 0.34);
   --active-dark: #09111f;
-  position: relative;
+  order: 2;
+  inline-size: 100%;
   overflow: hidden;
   display: grid;
   gap: 0.7rem;
-  min-height: 13rem;
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--active-light) 48%, transparent), transparent 38%),
     linear-gradient(150deg, color-mix(in srgb, var(--active-dark) 72%, #09111f), rgba(6, 11, 26, 0.95));
@@ -100,37 +169,28 @@ p {
 }
 
 h2 {
-  font-size: clamp(1.8rem, 2vw, 2.2rem);
+  font-size: clamp(1.4rem, 1.8vw, 2rem);
 }
 
 h3 {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 .turn-meta,
-.score-note {
+.score-note,
+.rule-list {
   color: var(--text-soft);
   line-height: 1.5;
 }
 
-.turn-badge {
-  position: absolute;
-  right: 1.15rem;
-  bottom: 1rem;
-  display: grid;
-  place-items: center;
-  width: 4rem;
-  height: 4rem;
-  border-radius: 1.2rem;
-  background: color-mix(in srgb, var(--active-primary) 72%, black);
-  color: white;
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
 .score-card {
+  order: 3;
+  inline-size: 100%;
   display: grid;
-  gap: 1rem;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.95rem;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .score-header {
@@ -143,28 +203,32 @@ h3 {
 .score-note {
   max-width: 12rem;
   text-align: right;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
 }
 
-.score-list {
+.score-list,
+.rule-list {
   display: grid;
-  gap: 0.8rem;
+  gap: 0.7rem;
   margin: 0;
   padding: 0;
   list-style: none;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 0.2rem;
 }
 
 .score-item {
   --player-primary: var(--accent);
   --player-light: rgba(109, 231, 255, 0.34);
   --player-dark: #143247;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
-  padding: 0.95rem 1rem;
+  padding: 0.82rem 0.9rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.1rem;
+  border-radius: 1rem;
   background: rgba(7, 12, 28, 0.8);
 }
 
@@ -176,35 +240,49 @@ h3 {
 .score-player {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.score-player-info {
+  min-width: 0;
 }
 
 .score-player-info p {
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .score-player-info span {
+  display: block;
   color: var(--text-soft);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
 }
 
 .player-mark {
   display: grid;
   place-items: center;
-  width: 2.6rem;
-  height: 2.6rem;
-  border-radius: 0.95rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.85rem;
   background: linear-gradient(160deg, var(--player-primary), var(--player-dark));
   color: #f6fbff;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 700;
 }
 
 strong {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
+  white-space: nowrap;
 }
 
-@media (max-width: 1120px) {
+.rule-list {
+  padding-left: 1rem;
+  list-style: disc;
+}
+
+@media (max-width: 1080px) {
   .score-header {
     flex-direction: column;
     align-items: start;
@@ -213,6 +291,47 @@ strong {
   .score-note {
     max-width: none;
     text-align: left;
+  }
+}
+
+@media (max-width: 720px) {
+  .score-item {
+    gap: 0.8rem;
+    padding: 0.75rem 0.8rem;
+  }
+
+  .player-mark {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  strong {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-height: 860px) {
+  .sidebar {
+    gap: 0.75rem;
+  }
+
+  .turn-card {
+    gap: 0.55rem;
+  }
+
+  .score-card {
+    gap: 0.8rem;
+  }
+
+  .score-item {
+    padding: 0.68rem 0.78rem;
+  }
+
+  .score-list,
+  .rule-list {
+    gap: 0.55rem;
   }
 }
 </style>

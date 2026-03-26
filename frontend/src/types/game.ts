@@ -6,6 +6,10 @@ export interface PlayerColor {
   dark: string
 }
 
+export type GamePhase = 'idle' | 'playing'
+
+export type ModalState = 'closed' | 'setup' | 'restart-warning'
+
 export interface SetupPlayer {
   id: number
   name: string
@@ -27,7 +31,7 @@ export interface Cell {
 }
 
 export interface GameState {
-  phase: 'setup' | 'playing'
+  phase: GamePhase
   players: PlayerConfig[]
   board: Cell[][]
   activePlayerIndex: number
@@ -43,4 +47,13 @@ export interface ScoreboardEntry {
   player: PlayerConfig
   fields: number
   isActive: boolean
+}
+
+export interface RestartSummaryEntry extends ScoreboardEntry {
+  isEliminated?: boolean
+}
+
+export interface RestartSummary {
+  contextLabel: string
+  entries: RestartSummaryEntry[]
 }

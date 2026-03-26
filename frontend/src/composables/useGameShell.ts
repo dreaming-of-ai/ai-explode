@@ -4,8 +4,10 @@ import { PLAYER_COLORS } from '@/data/playerColors'
 import type {
   Cell,
   GameState,
+  ModalState,
   PlayerColor,
   PlayerConfig,
+  RestartSummary,
   ScoreboardEntry,
   SetupPlayer,
   SetupValidation,
@@ -28,6 +30,16 @@ export function createEmptyBoard(): Cell[][] {
       load: 0,
     })),
   )
+}
+
+export function createIdleGameState(): GameState {
+  return {
+    phase: 'idle',
+    players: [],
+    board: createEmptyBoard(),
+    activePlayerIndex: 0,
+    round: 1,
+  }
 }
 
 function getColorById(colorId: string): PlayerColor {
@@ -61,10 +73,37 @@ export function createSetupPlayer(playerId: number, usedColorIds: string[] = [])
   }
 }
 
+export function normalizeSetupPlayers(players: SetupPlayer[]): SetupPlayer[] {
+  const assignedColors: string[] = []
+
+  return players.map((player) => {
+    const availableColorIds = PLAYER_COLORS.map((color) => color.id).filter(
+      (colorId) => !assignedColors.includes(colorId),
+    )
+    const nextColorId = availableColorIds.includes(player.colorId)
+      ? player.colorId
+      : (availableColorIds[0] ?? PLAYER_COLORS[0]?.id ?? 'red')
+
+    assignedColors.push(nextColorId)
+
+    if (nextColorId === player.colorId) {
+      return player
+    }
+
+    return {
+      ...player,
+      colorId: nextColorId,
+    }
+  })
+}
+
 export function createInitialSetupPlayers(): SetupPlayer[] {
   const firstColorId = PLAYER_COLORS[0]?.id ?? 'red'
 
-  return [createSetupPlayer(1, []), createSetupPlayer(2, [firstColorId])]
+  return normalizeSetupPlayers([
+    createSetupPlayer(1, []),
+    createSetupPlayer(2, [firstColorId]),
+  ])
 }
 
 export function addSetupPlayer(players: SetupPlayer[]): SetupPlayer[] {
@@ -74,7 +113,10 @@ export function addSetupPlayer(players: SetupPlayer[]): SetupPlayer[] {
 
   const nextId = players.reduce((highestId, player) => Math.max(highestId, player.id), 0) + 1
 
-  return [...players, createSetupPlayer(nextId, players.map((player) => player.colorId))]
+  return normalizeSetupPlayers([
+    ...players,
+    createSetupPlayer(nextId, players.map((player) => player.colorId)),
+  ])
 }
 
 export function removeSetupPlayer(players: SetupPlayer[], playerId: number): SetupPlayer[] {
@@ -82,19 +124,19 @@ export function removeSetupPlayer(players: SetupPlayer[], playerId: number): Set
     return players
   }
 
-  return players.filter((player) => player.id !== playerId)
+  return normalizeSetupPlayers(players.filter((player) => player.id !== playerId))
 }
 
 export function getAvailableColors(players: SetupPlayer[], playerId: number): PlayerColor[] {
-  const activePlayer = players.find((player) => player.id === playerId)
+  const playerIndex = players.findIndex((player) => player.id === playerId)
 
-  return PLAYER_COLORS.filter((color) => {
-    if (color.id === activePlayer?.colorId) {
-      return true
-    }
+  if (playerIndex === -1) {
+    return PLAYER_COLORS
+  }
 
-    return !players.some((player) => player.id !== playerId && player.colorId === color.id)
-  })
+  const reservedColorIds = players.slice(0, playerIndex).map((player) => player.colorId)
+
+  return PLAYER_COLORS.filter((color) => !reservedColorIds.includes(color.id))
 }
 
 export function validateSetupPlayers(players: SetupPlayer[]): SetupValidation {
@@ -206,19 +248,33 @@ export function createScoreboardEntries(state: GameState): ScoreboardEntry[] {
   }))
 }
 
+export function createRestartSummary(state: GameState): RestartSummary | null {
+  if (state.phase !== 'playing') {
+    return null
+  }
+
+  const activePlayer = state.players[state.activePlayerIndex]
+
+  return {
+    contextLabel: activePlayer
+      ? `Round ${state.round} · ${activePlayer.name} to play`
+      : `Round ${state.round}`,
+    entries: createScoreboardEntries(state).map((entry) => ({
+      ...entry,
+      isEliminated: undefined,
+    })),
+  }
+}
+
 export function useGameShell() {
   const setupPlayers = ref<SetupPlayer[]>(createInitialSetupPlayers())
-  const gameState = ref<GameState>({
-    phase: 'setup',
-    players: [],
-    board: createEmptyBoard(),
-    activePlayerIndex: 0,
-    round: 1,
-  })
+  const gameState = ref<GameState>(createIdleGameState())
+  const modalState = ref<ModalState>('closed')
 
   const setupValidation = computed(() => validateSetupPlayers(setupPlayers.value))
   const canAddPlayer = computed(() => setupPlayers.value.length < MAX_PLAYERS)
   const canRemovePlayer = computed(() => setupPlayers.value.length > MIN_PLAYERS)
+  const hasActiveGame = computed(() => gameState.value.phase === 'playing')
   const scoreboardEntries = computed(() =>
     gameState.value.phase === 'playing' ? createScoreboardEntries(gameState.value) : [],
   )
@@ -227,6 +283,9 @@ export function useGameShell() {
       ? gameState.value.players[gameState.value.activePlayerIndex] ?? null
       : null,
   )
+  const restartSummary = computed(() => createRestartSummary(gameState.value))
+  const isSetupModalOpen = computed(() => modalState.value === 'setup')
+  const isRestartWarningOpen = computed(() => modalState.value === 'restart-warning')
 
   function updatePlayerName(playerId: number, name: string) {
     setupPlayers.value = setupPlayers.value.map((player) =>
@@ -235,8 +294,10 @@ export function useGameShell() {
   }
 
   function updatePlayerColor(playerId: number, colorId: string) {
-    setupPlayers.value = setupPlayers.value.map((player) =>
-      player.id === playerId ? { ...player, colorId } : player,
+    setupPlayers.value = normalizeSetupPlayers(
+      setupPlayers.value.map((player) =>
+        player.id === playerId ? { ...player, colorId } : player,
+      ),
     )
   }
 
@@ -248,12 +309,31 @@ export function useGameShell() {
     setupPlayers.value = removeSetupPlayer(setupPlayers.value, playerId)
   }
 
+  function openNewGame() {
+    modalState.value = hasActiveGame.value ? 'restart-warning' : 'setup'
+  }
+
+  function closeSetupModal() {
+    if (modalState.value === 'setup') {
+      modalState.value = 'closed'
+    }
+  }
+
+  function continueCurrentGame() {
+    modalState.value = 'closed'
+  }
+
+  function proceedToSetupFromWarning() {
+    modalState.value = 'setup'
+  }
+
   function startGame() {
     if (!setupValidation.value.isValid) {
       return
     }
 
     gameState.value = startGameSession(setupPlayers.value)
+    modalState.value = 'closed'
   }
 
   function playCell(row: number, col: number) {
@@ -267,15 +347,24 @@ export function useGameShell() {
   return {
     setupPlayers,
     gameState,
+    modalState,
     setupValidation,
     canAddPlayer,
     canRemovePlayer,
+    hasActiveGame,
     scoreboardEntries,
     activePlayer,
+    restartSummary,
+    isSetupModalOpen,
+    isRestartWarningOpen,
     updatePlayerName,
     updatePlayerColor,
     addPlayer,
     removePlayer,
+    openNewGame,
+    closeSetupModal,
+    continueCurrentGame,
+    proceedToSetupFromWarning,
     startGame,
     playCell,
     getAvailableColors: (playerId: number) => getAvailableColors(setupPlayers.value, playerId),

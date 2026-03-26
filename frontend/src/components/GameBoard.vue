@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { Cell, PlayerConfig } from '@/types/game'
+import type { Cell, GamePhase, PlayerConfig } from '@/types/game'
 
 const props = defineProps<{
   board: Cell[][]
   players: PlayerConfig[]
+  phase: GamePhase
   isCellPlayable: (row: number, col: number) => boolean
 }>()
 
@@ -37,55 +38,52 @@ function getCellTone(row: number, col: number): 'corner' | 'edge' | 'interior' {
 
 <template>
   <section class="board-panel panel">
-    <div class="board-heading">
-      <div>
-        <p class="eyebrow">Playfield</p>
-        <h2>10 x 10 detonation grid</h2>
-      </div>
-      <p class="board-tip">Claim empty cells, reinforce your own, and wait for the full explosion rules in the next feature.</p>
-    </div>
-
-    <div class="board-grid">
+    <div class="board-stage">
       <div
-        v-for="(row, rowIndex) in board"
-        :key="rowIndex"
-        class="board-row"
+        class="board-grid"
+        :class="{ 'board-grid--idle': phase === 'idle' }"
       >
-        <button
-          v-for="cell in row"
-          :key="`${cell.row}-${cell.col}`"
-          class="board-cell"
-          :class="{
-            'tone-corner': getCellTone(cell.row, cell.col) === 'corner',
-            'tone-edge': getCellTone(cell.row, cell.col) === 'edge',
-            'tone-interior': getCellTone(cell.row, cell.col) === 'interior',
-            'is-empty': cell.owner === null,
-            'is-owned': cell.owner !== null,
-            'is-disabled': !isCellPlayable(cell.row, cell.col),
-          }"
-          :style="
-            getPlayer(cell.owner)
-              ? {
-                  '--cell-primary': getPlayer(cell.owner)?.color.primary,
-                  '--cell-light': getPlayer(cell.owner)?.color.light,
-                  '--cell-dark': getPlayer(cell.owner)?.color.dark,
-                }
-              : undefined
-          "
-          type="button"
-          :disabled="!isCellPlayable(cell.row, cell.col)"
-          @click="emit('play-cell', { row: cell.row, col: cell.col })"
+        <div
+          v-for="(row, rowIndex) in board"
+          :key="rowIndex"
+          class="board-row"
         >
-          <span
-            v-if="cell.owner !== null"
-            class="cell-initials"
+          <button
+            v-for="cell in row"
+            :key="`${cell.row}-${cell.col}`"
+            class="board-cell"
+            :class="{
+              'tone-corner': getCellTone(cell.row, cell.col) === 'corner',
+              'tone-edge': getCellTone(cell.row, cell.col) === 'edge',
+              'tone-interior': getCellTone(cell.row, cell.col) === 'interior',
+              'is-empty': cell.owner === null,
+              'is-owned': cell.owner !== null,
+              'is-disabled': !isCellPlayable(cell.row, cell.col),
+            }"
+            :style="
+              getPlayer(cell.owner)
+                ? {
+                    '--cell-primary': getPlayer(cell.owner)?.color.primary,
+                    '--cell-light': getPlayer(cell.owner)?.color.light,
+                    '--cell-dark': getPlayer(cell.owner)?.color.dark,
+                  }
+                : undefined
+            "
+            type="button"
+            :disabled="!isCellPlayable(cell.row, cell.col)"
+            @click="emit('play-cell', { row: cell.row, col: cell.col })"
           >
-            {{ getPlayer(cell.owner)?.initials }}
-          </span>
-          <span class="cell-load">
-            {{ cell.load > 0 ? cell.load : '' }}
-          </span>
-        </button>
+            <span
+              v-if="cell.owner !== null"
+              class="cell-initials"
+            >
+              {{ getPlayer(cell.owner)?.initials }}
+            </span>
+            <span class="cell-load">
+              {{ cell.load > 0 ? cell.load : '' }}
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -93,54 +91,35 @@ function getCellTone(row: number, col: number): 'corner' | 'edge' | 'interior' {
 
 <style scoped>
 .board-panel {
+  min-height: 0;
+}
+
+.board-stage {
   display: grid;
-  gap: 1.4rem;
-}
-
-.board-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.eyebrow {
-  margin: 0 0 0.35rem;
-  color: var(--accent);
-  font-size: 0.78rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-h2 {
-  margin: 0;
-  font-size: clamp(1.55rem, 2.5vw, 2.1rem);
-}
-
-.board-tip {
-  max-width: 20rem;
-  margin: 0;
-  color: var(--text-soft);
-  font-size: 0.95rem;
-  line-height: 1.5;
-  text-align: right;
+  place-items: center;
+  min-height: 0;
 }
 
 .board-grid {
   display: grid;
-  gap: 0.35rem;
-  padding: 0.75rem;
-  border-radius: 1.6rem;
+  gap: 0.26rem;
+  inline-size: min(100%, var(--board-size-limit));
+  padding: 0.58rem;
+  border-radius: 1.25rem;
   background:
     linear-gradient(160deg, rgba(107, 121, 255, 0.18), rgba(14, 23, 53, 0.4)),
     rgba(5, 10, 24, 0.9);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
+.board-grid--idle {
+  opacity: 0.92;
+}
+
 .board-row {
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
-  gap: 0.35rem;
+  gap: 0.26rem;
 }
 
 .board-cell {
@@ -151,9 +130,9 @@ h2 {
   display: grid;
   place-items: center;
   gap: 0.1rem;
-  padding: 0.25rem;
+  padding: 0.14rem;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 0.85rem;
+  border-radius: 0.64rem;
   background:
     radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.11), transparent 40%),
     rgba(13, 20, 42, 0.92);
@@ -193,29 +172,32 @@ h2 {
 
 .board-cell.is-disabled {
   cursor: not-allowed;
-  opacity: 0.65;
+  opacity: 0.72;
 }
 
 .cell-initials {
-  font-size: clamp(0.42rem, 0.8vw, 0.62rem);
+  font-size: clamp(0.4rem, 0.7vw, 0.56rem);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .cell-load {
-  font-size: clamp(0.95rem, 1.2vw, 1.15rem);
+  font-size: clamp(0.82rem, 1vw, 1.02rem);
   font-weight: 700;
 }
 
-@media (max-width: 1120px) {
-  .board-heading {
-    flex-direction: column;
-    align-items: start;
+@media (max-height: 860px) {
+  .board-grid {
+    gap: 0.22rem;
+    padding: 0.52rem;
   }
 
-  .board-tip {
-    max-width: none;
-    text-align: left;
+  .board-row {
+    gap: 0.22rem;
+  }
+
+  .board-cell {
+    border-radius: 0.52rem;
   }
 }
 </style>

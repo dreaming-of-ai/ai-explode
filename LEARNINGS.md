@@ -1,0 +1,13 @@
+# Learnings
+
+## 2026-03-26 Responsive Board-First Shell
+
+- The board should win every space trade. Non-essential copy above or around the board quickly causes viewport clipping on shorter screens.
+- Avoid duplicating status information in multiple regions. The round/current-player state worked better once it lived only in the right rail instead of both the header and the sidebar.
+- Idle-state UI should stay light. Extra explanatory boxes added visual noise and reduced usable board space without helping the core flow.
+- Sidebar panels with variable content need their own responsive strategy. Scoreboards should allow internal scrolling and row wrapping so player names, colors, and scores do not get clipped on smaller screens or with more players.
+- Modal forms with growing content need a scrollable body and persistent footer actions. Keeping the action buttons visible at the bottom of the setup modal made the flow much more reliable.
+- Responsive shell work is easiest to stabilize when height constraints are treated as first-class, not as an afterthought to width-based breakpoints.
+- Shared modal infrastructure must handle keyboard containment, not just visual presentation. Focus trapping, focus restoration, and making the background shell inert were necessary to meet the modal accessibility requirement.
+- The setup modal copy works best when the outer modal carries the product branding and the inner setup card carries only the task-specific heading. Duplicated titles and explanatory subcopy made the popup feel crowded without improving clarity.
+- Small hover translations near the viewport edge need explicit breathing room. Giving the right-rail primary action a few pixels of top margin prevented its hover state from appearing clipped.

@@ -4,6 +4,8 @@ import { computed } from 'vue'
 import GameBoard from '@/components/GameBoard.vue'
 import PlayerSetup from '@/components/PlayerSetup.vue'
 import PlayerSidebar from '@/components/PlayerSidebar.vue'
+import RestartWarningDialog from '@/components/RestartWarningDialog.vue'
+import ShellModal from '@/components/ShellModal.vue'
 import { useGameShell } from '@/composables/useGameShell'
 
 const {
@@ -14,43 +16,63 @@ const {
   canRemovePlayer,
   scoreboardEntries,
   activePlayer,
+  restartSummary,
+  isSetupModalOpen,
+  isRestartWarningOpen,
   updatePlayerName,
   updatePlayerColor,
   addPlayer,
   removePlayer,
+  openNewGame,
+  closeSetupModal,
+  continueCurrentGame,
+  proceedToSetupFromWarning,
   startGame,
   playCell,
   getAvailableColors,
   isCellPlayable,
 } = useGameShell()
 
-const statusLabel = computed(() => {
-  if (gameState.value.phase === 'setup') {
-    return 'Configure your lineup'
-  }
-
-  const currentPlayer = activePlayer.value
-
-  return currentPlayer ? `Round ${gameState.value.round} · ${currentPlayer.name} to play` : 'Game in progress'
-})
+const isModalOpen = computed(() => isSetupModalOpen.value || isRestartWarningOpen.value)
 </script>
 
 <template>
   <div class="app-frame">
-    <header class="app-header">
-      <div>
-        <p class="brand-kicker">AI Explode</p>
-        <h1>Tactical chain-reaction playground</h1>
-      </div>
+    <div
+      class="app-shell"
+      :inert="isModalOpen"
+      :aria-hidden="isModalOpen"
+    >
+      <header class="app-header">
+        <div class="brand-block">
+          <h1>AI Explode</h1>
+          <p class="brand-subtitle">A Tactical Chain-Reaction Game</p>
+        </div>
+      </header>
 
-      <div class="status-pill">
-        {{ statusLabel }}
-      </div>
-    </header>
+      <main class="shell-layout">
+        <GameBoard
+          :board="gameState.board"
+          :players="gameState.players"
+          :phase="gameState.phase"
+          :is-cell-playable="isCellPlayable"
+          @play-cell="playCell($event.row, $event.col)"
+        />
 
-    <main
-      v-if="gameState.phase === 'setup'"
-      class="setup-layout"
+        <PlayerSidebar
+          :entries="scoreboardEntries"
+          :active-player="activePlayer"
+          :round="gameState.round"
+          :phase="gameState.phase"
+          @new-game="openNewGame"
+        />
+      </main>
+    </div>
+
+    <ShellModal
+      v-if="isSetupModalOpen"
+      eyebrow="AI Explode"
+      @close="closeSetupModal"
     >
       <PlayerSetup
         :players="setupPlayers"
@@ -64,155 +86,100 @@ const statusLabel = computed(() => {
         @remove-player="removePlayer($event.playerId)"
         @start-game="startGame"
       />
+    </ShellModal>
 
-      <section class="setup-sidebar">
-        <article class="panel preview-card">
-          <p class="eyebrow">What ships now</p>
-          <h2>Playable shell, turn flow, and live scoreboard</h2>
-          <p>
-            This first increment focuses on the application shell and the rhythm of play. Empty cells can be
-            claimed, owned cells can be reinforced, and the active turn rotates automatically after every legal move.
-          </p>
-        </article>
-
-        <article class="panel facts-card">
-          <div>
-            <p class="eyebrow">Rules in this increment</p>
-            <ul>
-              <li>2 to 4 players with unique colors</li>
-              <li>10 x 10 grid with numeric load display</li>
-              <li>Own cells reinforce, rival cells stay locked</li>
-            </ul>
-          </div>
-
-          <div>
-            <p class="eyebrow">Next feature</p>
-            <p>Explosions, chain reactions, elimination, and winner detection will layer onto this same state model later.</p>
-          </div>
-        </article>
-      </section>
-    </main>
-
-    <main
-      v-else
-      class="game-layout"
+    <ShellModal
+      v-if="isRestartWarningOpen"
+      title="Replace current game?"
+      description="Your current session stays intact unless you continue into setup and confirm a fresh match."
+      :dismissible="false"
+      :close-on-backdrop="false"
     >
-      <GameBoard
-        :board="gameState.board"
-        :players="gameState.players"
-        :is-cell-playable="isCellPlayable"
-        @play-cell="playCell($event.row, $event.col)"
+      <RestartWarningDialog
+        :summary="restartSummary"
+        @continue-game="continueCurrentGame"
+        @start-over="proceedToSetupFromWarning"
       />
-
-      <PlayerSidebar
-        :entries="scoreboardEntries"
-        :active-player="activePlayer"
-        :round="gameState.round"
-      />
-    </main>
+    </ShellModal>
   </div>
 </template>
 
 <style scoped>
 .app-frame {
+  --board-size-limit: min(calc(100dvh - 13.5rem), calc(100vw - 19rem));
+  height: 100%;
   display: grid;
-  gap: 1.8rem;
+}
+
+.app-shell {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(0.75rem, 1.5vh, 1.1rem);
 }
 
 .app-header {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
+  display: block;
 }
 
-.brand-kicker,
-.eyebrow {
-  margin: 0 0 0.35rem;
-  color: var(--accent);
-  font-size: 0.78rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+.brand-block {
+  min-width: 0;
 }
 
 h1,
-h2,
-p,
-ul {
+p {
   margin: 0;
 }
 
 h1 {
-  font-size: clamp(2.6rem, 4vw, 4.4rem);
-  line-height: 0.95;
-  max-width: 12ch;
+  font-size: clamp(2.4rem, 4.5vw, 4.8rem);
+  line-height: 0.9;
+  letter-spacing: 0.02em;
 }
 
-h2 {
-  font-size: 1.55rem;
-  line-height: 1.15;
-}
-
-.status-pill {
-  padding: 0.9rem 1.15rem;
-  border: 1px solid rgba(109, 231, 255, 0.26);
-  border-radius: 999px;
-  background: rgba(7, 14, 31, 0.76);
-  color: var(--text-main);
-  white-space: nowrap;
-}
-
-.setup-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
-  gap: 1.2rem;
-  align-items: start;
-}
-
-.setup-sidebar {
-  display: grid;
-  gap: 1rem;
-}
-
-.preview-card,
-.facts-card {
-  display: grid;
-  gap: 1rem;
-}
-
-.preview-card p,
-.facts-card p,
-.facts-card li {
+.brand-subtitle {
+  margin-top: 0.25rem;
   color: var(--text-soft);
-  line-height: 1.65;
+  font-size: clamp(0.9rem, 1.35vw, 1.05rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.facts-card ul {
+.shell-layout {
+  min-height: 0;
   display: grid;
-  gap: 0.6rem;
-  padding-left: 1.1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 17.5rem);
+  gap: 0.85rem;
+  align-items: stretch;
 }
 
-.game-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.8fr);
-  gap: 1.2rem;
-  align-items: start;
-}
+@media (max-width: 1080px) {
+  .app-shell {
+    --board-size-limit: min(calc(100dvh - 17rem), calc(100vw - 2rem));
+  }
 
-@media (max-width: 1120px) {
-  .setup-layout,
-  .game-layout {
+  .shell-layout {
     grid-template-columns: 1fr;
   }
+}
 
-  .app-header {
-    flex-direction: column;
-    align-items: start;
-  }
-
-  .status-pill {
+@media (max-width: 720px) {
+  .brand-subtitle {
     white-space: normal;
+  }
+}
+
+@media (max-height: 860px) {
+  .app-shell {
+    --board-size-limit: min(calc(100dvh - 11.5rem), calc(100vw - 20rem));
+    gap: 0.7rem;
+  }
+}
+
+@media (max-height: 860px) and (max-width: 1080px) {
+  .app-shell {
+    --board-size-limit: min(calc(100dvh - 15.5rem), calc(100vw - 2rem));
   }
 }
 </style>
