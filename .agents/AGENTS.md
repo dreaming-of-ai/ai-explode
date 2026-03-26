@@ -29,6 +29,7 @@ Do not implement directly from a vague request when specification and planning a
 ## Feature documentation
 
 All feature specifications and implementation plans must be managed under `papers`.
+Additionally, screenshots of the feature in action are placed under `papers/screenshots`.
 
 ### Directory structure
 
@@ -221,3 +222,12 @@ When responding to implementation tasks:
 - mention assumptions
 - mention validation performed
 - mention risks or follow-up points if relevant
+
+---
+
+## Learnings
+
+- Whenever you have learned something important on the system architecture, design patterns, or domain that might be
+  relevant for future tasks add this to the `.agents/LEARNINGS.md` file.
+
+- Use the learnings to improve your future implementations and to avoid making the same mistakes again.
