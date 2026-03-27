@@ -6,6 +6,14 @@
 
 In parallel, the project serves as a practical demonstration of how to build and operate an agentic development environment with `Codex` or `Claude Code`. Beyond developing the game itself, the project also captures the surrounding workflow: creating specifications, deriving implementation plans, executing changes in a controlled way, and reviewing uncommitted work before it is committed.
 
+## Testing (Black Box)
+
+Tests are implemented using *Claude Opus 4.6* and the corresponding agents in the testing project.
+The first agent is creating a Gherkin test feature from a simple description and the specifications.
+The second agent is running the test and reporting the results.
+
+The testing project lives in its own repository under: https://github.com/dreaming-of-ai/ai-explode-testing
+
 ## Lessons Learned
 
 ### AGENT.md file
@@ -13,14 +21,22 @@ In parallel, the project serves as a practical demonstration of how to build and
 The *AGENT.md* must be located top-level and not below the `.agent`-directory for `Codex` to pick it up.
 This means the first three sessions have been done without the AI picking up the *AGENT.md* file.
 
-## Tracking Progress & Time (overall 5h 45m)
+## Tracking Progress & Time (overall 7h 15m)
+
+### Session 4 - 2026-03-27 / 1h 30m
+
+#### Testing
+
+- Added basic smoke test.
+- Added test for game creation with two players and simple moves.
+- Added test for game creation and handling illegal moves.
 
 ### Session 3 - 2026-03-26 / 2h 30m
 
 #### Implementation
 
 - Created the first specification with `Codex` and `GPT 5.4 Medium` using the `specification-writer` skill.
-- This was about cleaning up the initial optic, making the board and the overall app responsive and moving the *New Game* screen to a popup.
+- This was about cleaning up the initial optic, making the board and the overall app responsive, and moving the *New Game* screen to a popup.
 - Results have been ok so far, but one redo was needed.
 - Then several minor graphical changes have been done with the need to switch to `GPT 5.4 High` for some of the CSS work needed.
 - Maybe re-specifying those changes would have been better, but it is always tempting to just tell the AI what to do right away.
@@ -30,7 +46,6 @@ This means the first three sessions have been done without the AI picking up the
 
 - In parallel a separate testing project has been set up that is based on `Claude` and lifes in its own repository. This was done using `Claude sonnet 4.6`.
 - The idea of the testing project is having the AI writing Playwright tests for the game in Gherkin style and then running them. Therefore two separate agents have been configured in the testing project.
-- The testing project lives in its own repository under: https://github.com/dreaming-of-ai/ai-explode-testing
 
 ### Session 2 - 2026-03-25 / 2h
 
