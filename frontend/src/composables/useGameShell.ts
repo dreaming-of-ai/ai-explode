@@ -35,6 +35,11 @@ export interface PlayedMoveResult {
   resultPopup: MoveResultPopup | null
 }
 
+export interface BoardResolutionResult {
+  board: Cell[][]
+  sweepCount: number
+}
+
 export function normalizePlayerName(name: string): string {
   return name.trim().replace(/\s+/g, ' ')
 }
@@ -235,48 +240,92 @@ function getAdjacentCells(board: Cell[][], row: number, col: number): Cell[] {
   })
 }
 
-function getAllowedLoad(board: Cell[][], row: number, col: number): number {
-  return getAdjacentCells(board, row, col).length
+function applyPlayedLoad(board: Cell[][], row: number, col: number, activePlayerId: number) {
+  const cell = board[row]?.[col]
+
+  if (!cell) {
+    return
+  }
+
+  if (cell.owner === null) {
+    cell.owner = activePlayerId
+    cell.load = 1
+    return
+  }
+
+  cell.load += 1
 }
 
-function resolveSingleExplosion(board: Cell[][], row: number, col: number, activePlayerId: number) {
+function resolveSingleExplosion(board: Cell[][], row: number, col: number, activePlayerId: number): boolean {
   const origin = board[row]?.[col]
 
   if (!origin) {
-    return
+    return false
   }
 
   const adjacentCells = getAdjacentCells(board, row, col)
 
   if (origin.load <= adjacentCells.length) {
-    return
+    return false
   }
 
   adjacentCells.forEach((neighbor) => {
     neighbor.load += 1
-    neighbor.owner = activePlayerId
   })
 
   origin.load -= adjacentCells.length
+
+  adjacentCells.forEach((neighbor) => {
+    neighbor.owner = activePlayerId
+  })
+
+  return true
 }
 
-function resolveBoardAfterMove(state: GameState, row: number, col: number): Cell[][] {
+function resolveSweep(board: Cell[][], activePlayerId: number): boolean {
+  let hadExplosion = false
+
+  // A sweep traverses the live board once in row-major order.
+  board.forEach((boardRow, currentRow) => {
+    boardRow.forEach((_, currentCol) => {
+      if (resolveSingleExplosion(board, currentRow, currentCol, activePlayerId)) {
+        hadExplosion = true
+      }
+    })
+  })
+
+  return hadExplosion
+}
+
+export function resolveBoardAfterMove(
+  state: GameState,
+  row: number,
+  col: number,
+): BoardResolutionResult {
   const board = cloneBoard(state.board)
   const activePlayer = state.players[state.activePlayerIndex]
-  const cell = board[row][col]
 
-  if (cell.owner === null) {
-    cell.owner = activePlayer.id
-    cell.load = 1
-  } else {
-    cell.load += 1
+  if (!activePlayer) {
+    return {
+      board,
+      sweepCount: 0,
+    }
   }
 
-  if (cell.load > getAllowedLoad(board, row, col)) {
-    resolveSingleExplosion(board, row, col, activePlayer.id)
-  }
+  applyPlayedLoad(board, row, col, activePlayer.id)
 
-  return board
+  let sweepCount = 0
+  let hadExplosion = false
+
+  do {
+    sweepCount += 1
+    hadExplosion = resolveSweep(board, activePlayer.id)
+  } while (hadExplosion)
+
+  return {
+    board,
+    sweepCount,
+  }
 }
 
 function shouldEvaluatePostMoveOutcomes(state: GameState): boolean {
@@ -404,7 +453,7 @@ export function playMoveWithOutcome(state: GameState, row: number, col: number):
     }
   }
 
-  const board = resolveBoardAfterMove(state, row, col)
+  const { board } = resolveBoardAfterMove(state, row, col)
 
   return finalizeResolvedMove({
     ...state,

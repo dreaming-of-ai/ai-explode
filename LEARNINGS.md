@@ -23,3 +23,7 @@
 ## 2026-03-28 Post-Move Outcome Flow
 
 - Match outcome rules belong in a dedicated post-move step after board resolution, not inside the move-resolution mechanics themselves. Keeping permanent outcome state in `frontend/src/composables/useGameShell.ts` and the one-move popup payload as transient shell UI state makes later explosion upgrades cheaper without duplicating elimination, winner, and turn-skip logic.
+
+## 2026-03-28 Sweep Resolution Testability
+
+- Sweep-order rules are easier to lock down when `frontend/src/composables/useGameShell.ts` exposes only small internal resolution metadata, such as sweep counts, while the rest of the shell still consumes just the final resolved board. That keeps ordering regressions testable without leaking intermediate state into the UI flow.

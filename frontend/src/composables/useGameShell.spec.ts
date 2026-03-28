@@ -6,6 +6,7 @@ import {
   createEmptyBoard,
   createInitialSetupPlayers,
   createRestartSummary,
+  resolveBoardAfterMove,
   createScoreboardEntries,
   getAvailableColors,
   normalizeSetupPlayers,
@@ -50,6 +51,32 @@ function setBoardCell(
     ...board[row][col],
     ...overrides,
   }
+}
+
+function getAllowedLoad(board: Cell[][], row: number, col: number): number {
+  let allowedLoad = 0
+
+  for (let rowOffset = -1; rowOffset <= 1; rowOffset += 1) {
+    for (let colOffset = -1; colOffset <= 1; colOffset += 1) {
+      if (rowOffset === 0 && colOffset === 0) {
+        continue
+      }
+
+      if (board[row + rowOffset]?.[col + colOffset]) {
+        allowedLoad += 1
+      }
+    }
+  }
+
+  return allowedLoad
+}
+
+function expectStableBoard(board: Cell[][]) {
+  board.forEach((boardRow, row) => {
+    boardRow.forEach((cell, col) => {
+      expect(cell.load).toBeLessThanOrEqual(getAllowedLoad(board, row, col))
+    })
+  })
 }
 
 describe('setup validation', () => {
@@ -136,24 +163,33 @@ describe('play flow', () => {
     expect(reinforced.board[0][0]).toMatchObject({ owner: 1, load: 2 })
   })
 
-  it('resolves one corner explosion, transfers ownership, updates scores, and stops there', () => {
+  it('lets a later unvisited cell explode in the same sweep', () => {
     const board = createEmptyBoard()
     setBoardCell(board, 0, 0, { owner: 1, load: 3 })
     setBoardCell(board, 0, 1, { owner: 2, load: 2 })
     setBoardCell(board, 1, 1, { owner: 2, load: 8 })
 
-    const resolved = playMove(createPlayingState(board), 0, 0)
+    const initialState = createPlayingState(board)
+    const resolution = resolveBoardAfterMove(initialState, 0, 0)
+    const resolved = playMove(initialState, 0, 0)
 
-    expect(resolved.board[0][0]).toMatchObject({ owner: 1, load: 1 })
-    expect(resolved.board[0][1]).toMatchObject({ owner: 1, load: 3 })
-    expect(resolved.board[1][0]).toMatchObject({ owner: 1, load: 1 })
-    expect(resolved.board[1][1]).toMatchObject({ owner: 1, load: 9 })
-    expect(resolved.board[0][2]).toMatchObject({ owner: null, load: 0 })
+    expect(resolution.sweepCount).toBe(2)
+    expect(resolution.board[0][0]).toMatchObject({ owner: 1, load: 2 })
+    expect(resolution.board[0][1]).toMatchObject({ owner: 1, load: 4 })
+    expect(resolution.board[1][0]).toMatchObject({ owner: 1, load: 2 })
+    expect(resolution.board[1][1]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[0][2]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[1][2]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[2][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[2][1]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[2][2]).toMatchObject({ owner: 1, load: 1 })
+    expectStableBoard(resolution.board)
+    expect(resolved.board).toEqual(resolution.board)
     expect(resolved.activePlayerIndex).toBe(1)
     expect(resolved.round).toBe(1)
 
     expect(createScoreboardEntries(resolved)).toEqual([
-      expect.objectContaining({ player: expect.objectContaining({ id: 1 }), fields: 4, isActive: false }),
+      expect.objectContaining({ player: expect.objectContaining({ id: 1 }), fields: 9, isActive: false }),
       expect.objectContaining({ player: expect.objectContaining({ id: 2 }), fields: 0, isActive: true }),
     ])
   })
@@ -209,6 +245,48 @@ describe('play flow', () => {
     })
 
     expect(resolved.board[2][2]).toMatchObject({ owner: null, load: 0 })
+  })
+
+  it('waits until the next sweep before rechecking a cell that was already visited', () => {
+    const board = createEmptyBoard()
+    setBoardCell(board, 0, 0, { owner: 2, load: 3 })
+    setBoardCell(board, 1, 1, { owner: 1, load: 8 })
+
+    const resolution = resolveBoardAfterMove(createPlayingState(board), 1, 1)
+
+    expect(resolution.sweepCount).toBe(3)
+    expect(resolution.board[0][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[0][1]).toMatchObject({ owner: 1, load: 2 })
+    expect(resolution.board[1][0]).toMatchObject({ owner: 1, load: 2 })
+    expect(resolution.board[1][1]).toMatchObject({ owner: 1, load: 2 })
+    expect(resolution.board[0][2]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[1][2]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[2][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[2][1]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[2][2]).toMatchObject({ owner: 1, load: 1 })
+    expectStableBoard(resolution.board)
+  })
+
+  it('allows a field to explode again in a later sweep after receiving more load', () => {
+    const board = createEmptyBoard()
+    setBoardCell(board, 0, 0, { owner: 1, load: 3 })
+    setBoardCell(board, 0, 1, { owner: 2, load: 5 })
+    setBoardCell(board, 1, 0, { owner: 2, load: 5 })
+    setBoardCell(board, 1, 1, { owner: 2, load: 6 })
+
+    const resolution = resolveBoardAfterMove(createPlayingState(board), 0, 0)
+
+    expect(resolution.sweepCount).toBe(3)
+    expect(resolution.board[0][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[0][1]).toMatchObject({ owner: 1, load: 4 })
+    expect(resolution.board[1][0]).toMatchObject({ owner: 1, load: 4 })
+    expect(resolution.board[1][1]).toMatchObject({ owner: 1, load: 2 })
+    expect(resolution.board[0][2]).toMatchObject({ owner: 1, load: 2 })
+    expect(resolution.board[1][2]).toMatchObject({ owner: 1, load: 2 })
+    expect(resolution.board[2][0]).toMatchObject({ owner: 1, load: 2 })
+    expect(resolution.board[2][1]).toMatchObject({ owner: 1, load: 2 })
+    expect(resolution.board[2][2]).toMatchObject({ owner: 1, load: 1 })
+    expectStableBoard(resolution.board)
   })
 
   it("ignores clicks on an opponent's occupied cell", () => {
@@ -282,6 +360,31 @@ describe('play flow', () => {
       'Nova wins the match.',
     ])
     expect(playMove(result.state, 1, 1)).toBe(result.state)
+  })
+
+  it('evaluates erasure and winner detection from the final multi-sweep board', () => {
+    const board = createEmptyBoard()
+    setBoardCell(board, 1, 0, { owner: 2, load: 1 })
+    setBoardCell(board, 1, 1, { owner: 2, load: 8 })
+    setBoardCell(board, 1, 2, { owner: 1, load: 8 })
+
+    const state: GameState = {
+      ...startGameSession(createNamedPlayers()),
+      board,
+      activePlayerIndex: 0,
+      round: 2,
+    }
+
+    const result = playMoveWithOutcome(state, 1, 2)
+
+    expect(result.state.board[1][0]).toMatchObject({ owner: 1, load: 2 })
+    expect(result.state.erasedPlayerIds).toEqual([2])
+    expect(result.state.winnerPlayerId).toBe(1)
+    expect(result.state.isConcluded).toBe(true)
+    expect(result.resultPopup?.messages).toEqual([
+      'Atlas has been erased from the board.',
+      'Nova wins the match.',
+    ])
   })
 })
 
