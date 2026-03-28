@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import type { PlayerColor, SetupPlayer, SetupValidation } from '@/types/game'
+import { COMPUTER_PLAYERS, getComputerPlayerDisplayName } from '@/data/computerPlayers'
+import type {
+  ComputerPlayerId,
+  PlayerColor,
+  PlayerController,
+  SetupPlayer,
+  SetupValidation,
+} from '@/types/game'
 
 defineProps<{
   players: SetupPlayer[]
@@ -11,11 +18,24 @@ defineProps<{
 
 const emit = defineEmits<{
   (event: 'update-name', payload: { playerId: number; name: string }): void
+  (event: 'update-controller', payload: { playerId: number; controller: PlayerController }): void
+  (event: 'update-computer-player', payload: { playerId: number; computerPlayerId: ComputerPlayerId }): void
   (event: 'update-color', payload: { playerId: number; colorId: string }): void
   (event: 'add-player'): void
   (event: 'remove-player', payload: { playerId: number }): void
   (event: 'start-game'): void
 }>()
+
+function setController(playerId: number, controller: PlayerController) {
+  emit('update-controller', { playerId, controller })
+}
+
+function updateComputerPlayer(playerId: number, event: Event) {
+  emit('update-computer-player', {
+    playerId,
+    computerPlayerId: (event.target as HTMLSelectElement).value as ComputerPlayerId,
+  })
+}
 </script>
 
 <template>
@@ -34,7 +54,7 @@ const emit = defineEmits<{
         <div class="player-card__top">
           <div>
             <p class="player-label">Player {{ index + 1 }}</p>
-            <h4>Ready for orbit</h4>
+            <h4>{{ player.controller === 'computer' ? 'Auto pilot engaged' : 'Ready for orbit' }}</h4>
           </div>
 
           <button
@@ -47,7 +67,33 @@ const emit = defineEmits<{
           </button>
         </div>
 
-        <label class="field">
+        <div class="field">
+          <span>Controller</span>
+          <div class="controller-toggle">
+            <button
+              class="controller-button"
+              :class="{ 'is-selected': player.controller === 'human' }"
+              type="button"
+              @click="setController(player.id, 'human')"
+            >
+              Human
+            </button>
+
+            <button
+              class="controller-button"
+              :class="{ 'is-selected': player.controller === 'computer' }"
+              type="button"
+              @click="setController(player.id, 'computer')"
+            >
+              Computer
+            </button>
+          </div>
+        </div>
+
+        <label
+          v-if="player.controller === 'human'"
+          class="field"
+        >
           <span>Name</span>
           <input
             :value="player.name"
@@ -62,6 +108,34 @@ const emit = defineEmits<{
             "
           />
         </label>
+
+        <div
+          v-else
+          class="computer-config"
+        >
+          <label class="field">
+            <span>Computer Player</span>
+            <select
+              :value="player.computerPlayerId"
+              @change="updateComputerPlayer(player.id, $event)"
+            >
+              <option
+                v-for="computerPlayer in COMPUTER_PLAYERS"
+                :key="computerPlayer.id"
+                :value="computerPlayer.id"
+              >
+                {{ computerPlayer.name }}
+              </option>
+            </select>
+          </label>
+
+          <div class="field">
+            <span>Generated Name</span>
+            <div class="generated-name">
+              {{ getComputerPlayerDisplayName(player.computerPlayerId, index + 1) }}
+            </div>
+          </div>
+        </div>
 
         <div class="field">
           <span>Color</span>
@@ -198,7 +272,9 @@ h4 {
   font-size: 0.9rem;
 }
 
-input {
+input,
+select,
+.generated-name {
   width: 100%;
   padding: 0.9rem 1rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -208,9 +284,52 @@ input {
   font: inherit;
 }
 
-input:focus {
+input:focus,
+select:focus {
   outline: 2px solid rgba(109, 231, 255, 0.4);
   outline-offset: 1px;
+}
+
+.computer-config {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.controller-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.controller-button {
+  padding: 0.85rem 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(10, 16, 35, 0.88);
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.controller-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(109, 231, 255, 0.34);
+}
+
+.controller-button.is-selected {
+  border-color: rgba(109, 231, 255, 0.52);
+  background: linear-gradient(135deg, rgba(31, 54, 94, 0.92), rgba(9, 16, 36, 0.96));
+}
+
+.generated-name {
+  display: grid;
+  align-items: center;
+  min-height: 3.1rem;
+  font-weight: 600;
 }
 
 .color-grid {

@@ -1,13 +1,20 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 
+import {
+  DEFAULT_COMPUTER_PLAYER_ID,
+  getComputerPlayerDefinition,
+  getComputerPlayerDisplayName,
+} from '@/data/computerPlayers'
 import { PLAYER_COLORS } from '@/data/playerColors'
 import type {
   Cell,
+  ComputerPlayerId,
   GameState,
   ModalState,
   MoveResultPopup,
   PlayerColor,
   PlayerConfig,
+  PlayerController,
   RestartSummary,
   ScoreboardEntry,
   SetupPlayer,
@@ -17,6 +24,7 @@ import type {
 export const BOARD_SIZE = 8
 export const MIN_PLAYERS = 2
 export const MAX_PLAYERS = 4
+export const COMPUTER_TURN_DELAY_MS = 450
 
 // Preserve the canonical neighbor order for later sweep-based explosion work.
 const NEIGHBOR_OFFSETS_CLOCKWISE: ReadonlyArray<readonly [number, number]> = [
@@ -38,6 +46,11 @@ export interface PlayedMoveResult {
 export interface BoardResolutionResult {
   board: Cell[][]
   sweepCount: number
+}
+
+export interface BoardPosition {
+  row: number
+  col: number
 }
 
 export function normalizePlayerName(name: string): string {
@@ -96,6 +109,8 @@ export function createSetupPlayer(playerId: number, usedColorIds: string[] = [])
     id: playerId,
     name: '',
     colorId: getNextAvailableColor(usedColorIds).id,
+    controller: 'human',
+    computerPlayerId: DEFAULT_COMPUTER_PLAYER_ID,
   }
 }
 
@@ -167,19 +182,29 @@ export function getAvailableColors(players: SetupPlayer[], playerId: number): Pl
 
 export function validateSetupPlayers(players: SetupPlayer[]): SetupValidation {
   const errors: string[] = []
-  const normalizedNames = players.map((player) => normalizePlayerName(player.name))
+  const humanPlayers = players.filter((player) => player.controller === 'human')
+  const normalizedNames = humanPlayers.map((player) => normalizePlayerName(player.name))
   const uniqueColorCount = new Set(players.map((player) => player.colorId)).size
+  const hasInvalidComputerPlayer = players.some(
+    (player) =>
+      player.controller === 'computer' &&
+      getComputerPlayerDefinition(player.computerPlayerId) === null,
+  )
 
   if (players.length < MIN_PLAYERS || players.length > MAX_PLAYERS) {
     errors.push(`Choose between ${MIN_PLAYERS} and ${MAX_PLAYERS} players.`)
   }
 
   if (normalizedNames.some((name) => name.length === 0)) {
-    errors.push('Every player needs a name.')
+    errors.push('Every human player needs a name.')
   }
 
   if (uniqueColorCount !== players.length) {
     errors.push('Each player must have a unique color.')
+  }
+
+  if (hasInvalidComputerPlayer) {
+    errors.push('Every computer player needs a valid computer player type.')
   }
 
   return {
@@ -188,15 +213,23 @@ export function validateSetupPlayers(players: SetupPlayer[]): SetupValidation {
   }
 }
 
+export function getSetupPlayerDisplayName(player: SetupPlayer, slotNumber: number): string {
+  return player.controller === 'computer'
+    ? getComputerPlayerDisplayName(player.computerPlayerId, slotNumber)
+    : normalizePlayerName(player.name)
+}
+
 export function startGameSession(players: SetupPlayer[]): GameState {
-  const roster: PlayerConfig[] = players.map((player) => {
-    const name = normalizePlayerName(player.name)
+  const roster: PlayerConfig[] = players.map((player, index) => {
+    const name = getSetupPlayerDisplayName(player, index + 1)
 
     return {
       id: player.id,
       name,
       color: getColorById(player.colorId),
       initials: getPlayerInitials(name),
+      controller: player.controller,
+      computerPlayerId: player.controller === 'computer' ? player.computerPlayerId : null,
     }
   })
 
@@ -212,6 +245,20 @@ export function startGameSession(players: SetupPlayer[]): GameState {
   }
 }
 
+function getActivePlayer(state: GameState): PlayerConfig | null {
+  return state.phase === 'playing' ? state.players[state.activePlayerIndex] ?? null : null
+}
+
+export function isComputerPlayer(
+  player: Pick<PlayerConfig, 'controller'> | null | undefined,
+): boolean {
+  return player?.controller === 'computer'
+}
+
+export function isComputerTurn(state: GameState): boolean {
+  return isComputerPlayer(getActivePlayer(state))
+}
+
 export function isCellPlayable(state: GameState, row: number, col: number): boolean {
   if (state.phase !== 'playing' || state.isConcluded) {
     return false
@@ -223,7 +270,7 @@ export function isCellPlayable(state: GameState, row: number, col: number): bool
     return false
   }
 
-  const activePlayer = state.players[state.activePlayerIndex]
+  const activePlayer = getActivePlayer(state)
 
   return cell.owner === null || cell.owner === activePlayer?.id
 }
@@ -303,7 +350,7 @@ export function resolveBoardAfterMove(
   col: number,
 ): BoardResolutionResult {
   const board = cloneBoard(state.board)
-  const activePlayer = state.players[state.activePlayerIndex]
+  const activePlayer = getActivePlayer(state)
 
   if (!activePlayer) {
     return {
@@ -465,6 +512,59 @@ export function playMove(state: GameState, row: number, col: number): GameState 
   return playMoveWithOutcome(state, row, col).state
 }
 
+export function getPlayableMoves(state: GameState): BoardPosition[] {
+  if (state.phase !== 'playing' || state.isConcluded) {
+    return []
+  }
+
+  return state.board.flatMap((boardRow) =>
+    boardRow.flatMap((cell) =>
+      isCellPlayable(state, cell.row, cell.col) ? [{ row: cell.row, col: cell.col }] : [],
+    ),
+  )
+}
+
+function getRandomMoveIndex(moveCount: number, randomNumber: number): number {
+  if (moveCount <= 1) {
+    return 0
+  }
+
+  const normalizedRandom = Math.min(Math.max(randomNumber, 0), 0.999999999999)
+
+  return Math.floor(normalizedRandom * moveCount)
+}
+
+export function selectRandomComputerMove(
+  state: GameState,
+  randomSource: () => number = Math.random,
+): BoardPosition | null {
+  const playableMoves = getPlayableMoves(state)
+
+  if (playableMoves.length === 0) {
+    return null
+  }
+
+  return playableMoves[getRandomMoveIndex(playableMoves.length, randomSource())] ?? null
+}
+
+export function selectComputerMove(
+  state: GameState,
+  randomSource: () => number = Math.random,
+): BoardPosition | null {
+  const activePlayer = getActivePlayer(state)
+
+  if (!activePlayer || !isComputerPlayer(activePlayer) || activePlayer.computerPlayerId === null) {
+    return null
+  }
+
+  switch (activePlayer.computerPlayerId) {
+    case 'random':
+      return selectRandomComputerMove(state, randomSource)
+    default:
+      return null
+  }
+}
+
 export function countFieldsByPlayer(players: PlayerConfig[], board: Cell[][]): Record<number, number> {
   const counts = Object.fromEntries(players.map((player) => [player.id, 0])) as Record<number, number>
 
@@ -544,6 +644,24 @@ export function useGameShell() {
     )
   }
 
+  function updatePlayerController(playerId: number, controller: PlayerController) {
+    setupPlayers.value = setupPlayers.value.map((player) =>
+      player.id === playerId
+        ? {
+            ...player,
+            controller,
+            computerPlayerId: player.computerPlayerId ?? DEFAULT_COMPUTER_PLAYER_ID,
+          }
+        : player,
+    )
+  }
+
+  function updateComputerPlayer(playerId: number, computerPlayerId: ComputerPlayerId) {
+    setupPlayers.value = setupPlayers.value.map((player) =>
+      player.id === playerId ? { ...player, computerPlayerId } : player,
+    )
+  }
+
   function updatePlayerColor(playerId: number, colorId: string) {
     setupPlayers.value = normalizeSetupPlayers(
       setupPlayers.value.map((player) =>
@@ -597,7 +715,7 @@ export function useGameShell() {
     modalState.value = 'closed'
   }
 
-  function playCell(row: number, col: number) {
+  function applyMove(row: number, col: number) {
     if (gameState.value.phase !== 'playing' || modalState.value !== 'closed') {
       return
     }
@@ -613,6 +731,48 @@ export function useGameShell() {
 
     moveResultPopup.value = null
   }
+
+  function playComputerTurn() {
+    if (gameState.value.phase !== 'playing' || modalState.value !== 'closed' || !isComputerTurn(gameState.value)) {
+      return
+    }
+
+    const move = selectComputerMove(gameState.value)
+
+    if (!move) {
+      return
+    }
+
+    applyMove(move.row, move.col)
+  }
+
+  function playCell(row: number, col: number) {
+    if (isComputerTurn(gameState.value)) {
+      return
+    }
+
+    applyMove(row, col)
+  }
+
+  watchEffect((onCleanup) => {
+    if (modalState.value !== 'closed' || !isComputerTurn(gameState.value)) {
+      return
+    }
+
+    const move = selectComputerMove(gameState.value)
+
+    if (!move) {
+      return
+    }
+
+    const timerId = setTimeout(() => {
+      playComputerTurn()
+    }, COMPUTER_TURN_DELAY_MS)
+
+    onCleanup(() => {
+      clearTimeout(timerId)
+    })
+  })
 
   return {
     setupPlayers,
@@ -631,6 +791,8 @@ export function useGameShell() {
     isRestartWarningOpen,
     isMoveResultOpen,
     updatePlayerName,
+    updatePlayerController,
+    updateComputerPlayer,
     updatePlayerColor,
     addPlayer,
     removePlayer,
@@ -643,6 +805,8 @@ export function useGameShell() {
     playCell,
     getAvailableColors: (playerId: number) => getAvailableColors(setupPlayers.value, playerId),
     isCellPlayable: (row: number, col: number) =>
-      modalState.value === 'closed' && isCellPlayable(gameState.value, row, col),
+      modalState.value === 'closed' &&
+      !isComputerTurn(gameState.value) &&
+      isCellPlayable(gameState.value, row, col),
   }
 }

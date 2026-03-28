@@ -29,6 +29,10 @@ function getPlayerStatus(entry: ScoreboardEntry): string {
 
   return 'In play'
 }
+
+function getPlayerRole(player: PlayerConfig): string {
+  return player.controller === 'computer' ? 'Computer' : 'Human'
+}
 </script>
 
 <template>
@@ -53,7 +57,13 @@ function getPlayerStatus(entry: ScoreboardEntry): string {
     >
       <p class="eyebrow">Current Turn</p>
       <h2>{{ activePlayer.name }}</h2>
-      <p class="turn-meta">Round {{ round }}</p>
+      <p class="turn-meta">
+        {{
+          activePlayer.controller === 'computer'
+            ? `Round ${round} · Computer turn plays automatically.`
+            : `Round ${round}`
+        }}
+      </p>
     </section>
 
     <section
@@ -110,7 +120,7 @@ function getPlayerStatus(entry: ScoreboardEntry): string {
             <span class="player-mark">{{ entry.player.initials }}</span>
             <div class="score-player-info">
               <p>{{ entry.player.name }}</p>
-              <span>{{ entry.player.color.name }} · {{ getPlayerStatus(entry) }}</span>
+              <span>{{ entry.player.color.name }} · {{ getPlayerRole(entry.player) }} · {{ getPlayerStatus(entry) }}</span>
             </div>
           </div>
 

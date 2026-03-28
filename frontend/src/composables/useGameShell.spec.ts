@@ -1,11 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   BOARD_SIZE,
+  COMPUTER_TURN_DELAY_MS,
   addSetupPlayer,
   createEmptyBoard,
   createInitialSetupPlayers,
   createRestartSummary,
+  getPlayableMoves,
   resolveBoardAfterMove,
   createScoreboardEntries,
   getAvailableColors,
@@ -13,24 +15,45 @@ import {
   playMove,
   playMoveWithOutcome,
   removeSetupPlayer,
+  selectRandomComputerMove,
   startGameSession,
   useGameShell,
   validateSetupPlayers,
 } from '@/composables/useGameShell'
 import type { Cell, GameState, SetupPlayer } from '@/types/game'
 
+function createHumanPlayer(id: number, name: string, colorId: string): SetupPlayer {
+  return {
+    id,
+    name,
+    colorId,
+    controller: 'human',
+    computerPlayerId: 'random',
+  }
+}
+
+function createRandomPlayer(id: number, colorId: string): SetupPlayer {
+  return {
+    id,
+    name: '',
+    colorId,
+    controller: 'computer',
+    computerPlayerId: 'random',
+  }
+}
+
 function createNamedPlayers(): SetupPlayer[] {
   return [
-    { id: 1, name: 'Nova', colorId: 'red' },
-    { id: 2, name: 'Atlas', colorId: 'blue' },
+    createHumanPlayer(1, 'Nova', 'red'),
+    createHumanPlayer(2, 'Atlas', 'blue'),
   ]
 }
 
 function createThreeNamedPlayers(): SetupPlayer[] {
   return [
-    { id: 1, name: 'Nova', colorId: 'red' },
-    { id: 2, name: 'Atlas', colorId: 'blue' },
-    { id: 3, name: 'Vega', colorId: 'green' },
+    createHumanPlayer(1, 'Nova', 'red'),
+    createHumanPlayer(2, 'Atlas', 'blue'),
+    createHumanPlayer(3, 'Vega', 'green'),
   ]
 }
 
@@ -79,6 +102,10 @@ function expectStableBoard(board: Cell[][]) {
   })
 }
 
+afterEach(() => {
+  vi.useRealTimers()
+})
+
 describe('setup validation', () => {
   it('creates an 8x8 board by default', () => {
     const board = createEmptyBoard()
@@ -97,13 +124,25 @@ describe('setup validation', () => {
 
   it('requires names and unique colors', () => {
     const validation = validateSetupPlayers([
-      { id: 1, name: '   ', colorId: 'red' },
-      { id: 2, name: 'Atlas', colorId: 'red' },
+      createHumanPlayer(1, '   ', 'red'),
+      createHumanPlayer(2, 'Atlas', 'red'),
     ])
 
     expect(validation.isValid).toBe(false)
-    expect(validation.errors).toContain('Every player needs a name.')
+    expect(validation.errors).toContain('Every human player needs a name.')
     expect(validation.errors).toContain('Each player must have a unique color.')
+  })
+
+  it('allows computer-controlled slots without manual names', () => {
+    const validation = validateSetupPlayers([
+      createHumanPlayer(1, 'Nova', 'red'),
+      createRandomPlayer(2, 'blue'),
+    ])
+
+    expect(validation).toEqual({
+      isValid: true,
+      errors: [],
+    })
   })
 
   it('caps add/remove actions at the allowed player bounds', () => {
@@ -117,9 +156,9 @@ describe('setup validation', () => {
   it('limits color choices based only on earlier player selections', () => {
     const colors = getAvailableColors(
       [
-        { id: 1, name: 'Nova', colorId: 'red' },
-        { id: 2, name: 'Atlas', colorId: 'blue' },
-        { id: 3, name: 'Vega', colorId: 'green' },
+        createHumanPlayer(1, 'Nova', 'red'),
+        createHumanPlayer(2, 'Atlas', 'blue'),
+        createHumanPlayer(3, 'Vega', 'green'),
       ],
       2,
     )
@@ -129,13 +168,27 @@ describe('setup validation', () => {
 
   it('auto-corrects downstream colors after an upstream change invalidates them', () => {
     const players = normalizeSetupPlayers([
-      { id: 1, name: 'Nova', colorId: 'blue' },
-      { id: 2, name: 'Atlas', colorId: 'blue' },
-      { id: 3, name: 'Vega', colorId: 'green' },
-      { id: 4, name: 'Orion', colorId: 'amber' },
+      createHumanPlayer(1, 'Nova', 'blue'),
+      createHumanPlayer(2, 'Atlas', 'blue'),
+      createHumanPlayer(3, 'Vega', 'green'),
+      createHumanPlayer(4, 'Orion', 'amber'),
     ])
 
     expect(players.map((player) => player.colorId)).toEqual(['blue', 'red', 'green', 'amber'])
+  })
+
+  it('generates computer-player roster names from the slot number', () => {
+    const state = startGameSession([
+      createHumanPlayer(1, 'Nova', 'red'),
+      createRandomPlayer(2, 'blue'),
+    ])
+
+    expect(state.players[1]).toMatchObject({
+      name: 'Random 2',
+      controller: 'computer',
+      computerPlayerId: 'random',
+      initials: 'R2',
+    })
   })
 })
 
@@ -389,6 +442,39 @@ describe('play flow', () => {
 })
 
 describe('shell flow', () => {
+  it('ignores manual clicks while a computer-controlled player is active', () => {
+    vi.useFakeTimers()
+
+    const shell = useGameShell()
+
+    shell.updatePlayerController(1, 'computer')
+    shell.updatePlayerName(2, 'Atlas')
+    shell.startGame()
+    shell.playCell(0, 0)
+
+    expect(shell.gameState.value.board[0][0]).toMatchObject({ owner: null, load: 0 })
+  })
+
+  it('chooses only legal cells for the random computer player', () => {
+    const state: GameState = {
+      ...startGameSession([
+        createRandomPlayer(1, 'red'),
+        createHumanPlayer(2, 'Atlas', 'blue'),
+      ]),
+      board: createEmptyBoard(),
+    }
+
+    setBoardCell(state.board, 0, 0, { owner: 2, load: 1 })
+    setBoardCell(state.board, 1, 1, { owner: 1, load: 2 })
+
+    const playableMoves = getPlayableMoves(state)
+    const selectedMove = selectRandomComputerMove(state, () => 0.999999)
+
+    expect(playableMoves).not.toContainEqual({ row: 0, col: 0 })
+    expect(selectedMove).not.toEqual({ row: 0, col: 0 })
+    expect(selectedMove).toEqual(playableMoves[playableMoves.length - 1])
+  })
+
   it('opens setup on first render, but warns before replacing an active game', () => {
     const shell = useGameShell()
 
@@ -466,5 +552,52 @@ describe('shell flow', () => {
     expect(shell.modalState.value).toBe('closed')
     expect(shell.moveResultPopup.value).toBeNull()
     expect(shell.isCellPlayable(2, 2)).toBe(true)
+  })
+
+  it('automatically plays the first move for an opening random computer player', async () => {
+    vi.useFakeTimers()
+
+    const shell = useGameShell()
+
+    shell.updatePlayerController(1, 'computer')
+    shell.updatePlayerName(2, 'Atlas')
+    shell.startGame()
+    await Promise.resolve()
+
+    expect(shell.gameState.value.phase).toBe('playing')
+    expect(shell.gameState.value.players[0].name).toBe('Random 1')
+    expect(shell.gameState.value.board.flat().every((cell) => cell.owner === null)).toBe(true)
+
+    vi.advanceTimersByTime(COMPUTER_TURN_DELAY_MS)
+
+    const occupiedCells = shell.gameState.value.board.flat().filter((cell) => cell.owner !== null)
+
+    expect(occupiedCells).toHaveLength(1)
+    expect(occupiedCells[0]).toMatchObject({ owner: 1, load: 1 })
+    expect(shell.gameState.value.activePlayerIndex).toBe(1)
+  })
+
+  it('automatically hands off from a human move to the next random computer move', async () => {
+    vi.useFakeTimers()
+
+    const shell = useGameShell()
+
+    shell.updatePlayerName(1, 'Nova')
+    shell.updatePlayerController(2, 'computer')
+    shell.startGame()
+    shell.playCell(0, 0)
+    await Promise.resolve()
+
+    expect(shell.gameState.value.board[0][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(shell.gameState.value.activePlayerIndex).toBe(1)
+
+    vi.advanceTimersByTime(COMPUTER_TURN_DELAY_MS)
+
+    const playerTwoFields = shell.gameState.value.board.flat().filter((cell) => cell.owner === 2)
+
+    expect(playerTwoFields).toHaveLength(1)
+    expect(shell.gameState.value.board[0][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(shell.gameState.value.activePlayerIndex).toBe(0)
+    expect(shell.gameState.value.round).toBe(2)
   })
 })

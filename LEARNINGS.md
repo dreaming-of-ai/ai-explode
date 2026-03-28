@@ -27,3 +27,7 @@
 ## 2026-03-28 Sweep Resolution Testability
 
 - Sweep-order rules are easier to lock down when `frontend/src/composables/useGameShell.ts` exposes only small internal resolution metadata, such as sweep counts, while the rest of the shell still consumes just the final resolved board. That keeps ordering regressions testable without leaking intermediate state into the UI flow.
+
+## 2026-03-28 Computer Player Turn Orchestration
+
+- Computer turns fit best as a single modal-aware watcher in `frontend/src/composables/useGameShell.ts` that reacts to the active player and current modal state. Keeping AI scheduling there prevents autoplay from skipping over move-result or restart dialogs and lets future computer-player types reuse the same turn handoff without duplicating timer logic in components.

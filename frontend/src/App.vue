@@ -24,6 +24,8 @@ const {
   isMoveResultOpen,
   moveResultPopup,
   updatePlayerName,
+  updatePlayerController,
+  updateComputerPlayer,
   updatePlayerColor,
   addPlayer,
   removePlayer,
@@ -90,6 +92,8 @@ const isModalOpen = computed(
         :can-remove-player="canRemovePlayer"
         :get-available-colors="getAvailableColors"
         @update-name="updatePlayerName($event.playerId, $event.name)"
+        @update-controller="updatePlayerController($event.playerId, $event.controller)"
+        @update-computer-player="updateComputerPlayer($event.playerId, $event.computerPlayerId)"
         @update-color="updatePlayerColor($event.playerId, $event.colorId)"
         @add-player="addPlayer"
         @remove-player="removePlayer($event.playerId)"

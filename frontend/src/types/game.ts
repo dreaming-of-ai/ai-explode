@@ -10,10 +10,22 @@ export type GamePhase = 'idle' | 'playing'
 
 export type ModalState = 'closed' | 'setup' | 'restart-warning' | 'move-result'
 
+export type PlayerController = 'human' | 'computer'
+
+export type ComputerPlayerId = 'random'
+
+export interface ComputerPlayerDefinition {
+  id: ComputerPlayerId
+  name: string
+  description: string
+}
+
 export interface SetupPlayer {
   id: number
   name: string
   colorId: string
+  controller: PlayerController
+  computerPlayerId: ComputerPlayerId
 }
 
 export interface PlayerConfig {
@@ -21,6 +33,8 @@ export interface PlayerConfig {
   name: string
   color: PlayerColor
   initials: string
+  controller: PlayerController
+  computerPlayerId: ComputerPlayerId | null
 }
 
 export interface Cell {
