@@ -10,6 +10,7 @@ import type {
   Cell,
   ComputerPlayerId,
   GameState,
+  LegalPageId,
   ModalState,
   MoveResultPopup,
   PlayerColor,
@@ -611,6 +612,7 @@ export function createRestartSummary(state: GameState): RestartSummary | null {
 export function useGameShell() {
   const setupPlayers = ref<SetupPlayer[]>(createInitialSetupPlayers())
   const gameState = ref<GameState>(createIdleGameState())
+  const activeLegalPage = ref<LegalPageId | null>(null)
   const modalState = ref<ModalState>('closed')
   const moveResultPopup = ref<MoveResultPopup | null>(null)
 
@@ -618,6 +620,7 @@ export function useGameShell() {
   const canAddPlayer = computed(() => setupPlayers.value.length < MAX_PLAYERS)
   const canRemovePlayer = computed(() => setupPlayers.value.length > MIN_PLAYERS)
   const hasActiveGame = computed(() => gameState.value.phase === 'playing')
+  const isLegalPageOpen = computed(() => activeLegalPage.value !== null)
   const scoreboardEntries = computed(() =>
     gameState.value.phase === 'playing' ? createScoreboardEntries(gameState.value) : [],
   )
@@ -698,6 +701,18 @@ export function useGameShell() {
     modalState.value = 'setup'
   }
 
+  function openLegalPage(pageId: LegalPageId) {
+    if (modalState.value !== 'closed') {
+      return
+    }
+
+    activeLegalPage.value = pageId
+  }
+
+  function closeLegalPage() {
+    activeLegalPage.value = null
+  }
+
   function dismissMoveResult() {
     if (modalState.value === 'move-result') {
       moveResultPopup.value = null
@@ -716,7 +731,11 @@ export function useGameShell() {
   }
 
   function applyMove(row: number, col: number) {
-    if (gameState.value.phase !== 'playing' || modalState.value !== 'closed') {
+    if (
+      gameState.value.phase !== 'playing' ||
+      modalState.value !== 'closed' ||
+      activeLegalPage.value !== null
+    ) {
       return
     }
 
@@ -733,7 +752,12 @@ export function useGameShell() {
   }
 
   function playComputerTurn() {
-    if (gameState.value.phase !== 'playing' || modalState.value !== 'closed' || !isComputerTurn(gameState.value)) {
+    if (
+      gameState.value.phase !== 'playing' ||
+      modalState.value !== 'closed' ||
+      activeLegalPage.value !== null ||
+      !isComputerTurn(gameState.value)
+    ) {
       return
     }
 
@@ -755,7 +779,7 @@ export function useGameShell() {
   }
 
   watchEffect((onCleanup) => {
-    if (modalState.value !== 'closed' || !isComputerTurn(gameState.value)) {
+    if (activeLegalPage.value !== null || modalState.value !== 'closed' || !isComputerTurn(gameState.value)) {
       return
     }
 
@@ -777,12 +801,14 @@ export function useGameShell() {
   return {
     setupPlayers,
     gameState,
+    activeLegalPage,
     modalState,
     moveResultPopup,
     setupValidation,
     canAddPlayer,
     canRemovePlayer,
     hasActiveGame,
+    isLegalPageOpen,
     scoreboardEntries,
     activePlayer,
     winnerPlayer,
@@ -800,11 +826,14 @@ export function useGameShell() {
     closeSetupModal,
     continueCurrentGame,
     proceedToSetupFromWarning,
+    openLegalPage,
+    closeLegalPage,
     dismissMoveResult,
     startGame,
     playCell,
     getAvailableColors: (playerId: number) => getAvailableColors(setupPlayers.value, playerId),
     isCellPlayable: (row: number, col: number) =>
+      activeLegalPage.value === null &&
       modalState.value === 'closed' &&
       !isComputerTurn(gameState.value) &&
       isCellPlayable(gameState.value, row, col),

@@ -31,3 +31,7 @@
 ## 2026-03-28 Computer Player Turn Orchestration
 
 - Computer turns fit best as a single modal-aware watcher in `frontend/src/composables/useGameShell.ts` that reacts to the active player and current modal state. Keeping AI scheduling there prevents autoplay from skipping over move-result or restart dialogs and lets future computer-player types reuse the same turn handoff without duplicating timer logic in components.
+
+## 2026-03-28 Legal Shell Views
+
+- Non-game shell views such as legal pages should stay as a narrow sibling UI state in `frontend/src/composables/useGameShell.ts`, not inside `GameState`. That preserves the live match across view switches and gives the existing computer-turn watcher one place to pause automation whenever gameplay is temporarily hidden.

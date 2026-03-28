@@ -2,16 +2,20 @@
 import { computed } from 'vue'
 
 import GameBoard from '@/components/GameBoard.vue'
+import LegalFooter from '@/components/LegalFooter.vue'
+import LegalPage from '@/components/LegalPage.vue'
 import MoveResultDialog from '@/components/MoveResultDialog.vue'
 import PlayerSetup from '@/components/PlayerSetup.vue'
 import PlayerSidebar from '@/components/PlayerSidebar.vue'
 import RestartWarningDialog from '@/components/RestartWarningDialog.vue'
 import ShellModal from '@/components/ShellModal.vue'
 import { useGameShell } from '@/composables/useGameShell'
+import { getLegalPageDocument, LEGAL_PAGE_LINKS } from '@/data/legalPages'
 
 const {
   setupPlayers,
   gameState,
+  activeLegalPage,
   setupValidation,
   canAddPlayer,
   canRemovePlayer,
@@ -33,6 +37,8 @@ const {
   closeSetupModal,
   continueCurrentGame,
   proceedToSetupFromWarning,
+  openLegalPage,
+  closeLegalPage,
   dismissMoveResult,
   startGame,
   playCell,
@@ -40,6 +46,10 @@ const {
   isCellPlayable,
 } = useGameShell()
 
+const isBoardShellVisible = computed(() => activeLegalPage.value === null)
+const activeLegalDocument = computed(() =>
+  activeLegalPage.value ? getLegalPageDocument(activeLegalPage.value) : null,
+)
 const isModalOpen = computed(
   () => isSetupModalOpen.value || isRestartWarningOpen.value || isMoveResultOpen.value,
 )
@@ -49,6 +59,10 @@ const isModalOpen = computed(
   <div class="app-frame">
     <div
       class="app-shell"
+      :class="{
+        'app-shell--board': isBoardShellVisible,
+        'app-shell--legal': !isBoardShellVisible,
+      }"
       :inert="isModalOpen"
       :aria-hidden="isModalOpen"
     >
@@ -59,25 +73,42 @@ const isModalOpen = computed(
         </div>
       </header>
 
-      <main class="shell-layout">
-        <GameBoard
-          :board="gameState.board"
-          :players="gameState.players"
-          :phase="gameState.phase"
-          :is-cell-playable="isCellPlayable"
-          @play-cell="playCell($event.row, $event.col)"
-        />
+      <main class="shell-main">
+        <div
+          v-if="isBoardShellVisible"
+          class="shell-layout"
+        >
+          <GameBoard
+            :board="gameState.board"
+            :players="gameState.players"
+            :phase="gameState.phase"
+            :is-cell-playable="isCellPlayable"
+            @play-cell="playCell($event.row, $event.col)"
+          />
 
-        <PlayerSidebar
-          :entries="scoreboardEntries"
-          :active-player="activePlayer"
-          :winner-player="winnerPlayer"
-          :round="gameState.round"
-          :phase="gameState.phase"
-          :is-concluded="gameState.isConcluded"
-          @new-game="openNewGame"
+          <PlayerSidebar
+            :entries="scoreboardEntries"
+            :active-player="activePlayer"
+            :winner-player="winnerPlayer"
+            :round="gameState.round"
+            :phase="gameState.phase"
+            :is-concluded="gameState.isConcluded"
+            @new-game="openNewGame"
+          />
+        </div>
+
+        <LegalPage
+          v-else-if="activeLegalDocument"
+          :document="activeLegalDocument"
+          @return-to-game="closeLegalPage"
         />
       </main>
+
+      <LegalFooter
+        v-if="isBoardShellVisible"
+        :entries="LEGAL_PAGE_LINKS"
+        @open="openLegalPage"
+      />
     </div>
 
     <ShellModal
@@ -133,7 +164,6 @@ const isModalOpen = computed(
 
 <style scoped>
 .app-frame {
-  --board-size-limit: min(calc(100dvh - 13.5rem), calc(100vw - 19rem));
   height: 100%;
   display: grid;
 }
@@ -141,12 +171,25 @@ const isModalOpen = computed(
 .app-shell {
   min-height: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
   gap: clamp(0.75rem, 1.5vh, 1.1rem);
+}
+
+.app-shell--board {
+  --board-size-limit: min(calc(100dvh - 16rem), calc(100vw - 19rem));
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.app-shell--legal {
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .app-header {
   display: block;
+}
+
+.shell-main {
+  min-height: 0;
+  display: grid;
 }
 
 .brand-block {
@@ -182,8 +225,8 @@ h1 {
 }
 
 @media (max-width: 1080px) {
-  .app-shell {
-    --board-size-limit: min(calc(100dvh - 17rem), calc(100vw - 2rem));
+  .app-shell--board {
+    --board-size-limit: min(calc(100dvh - 19.5rem), calc(100vw - 2rem));
   }
 
   .shell-layout {
@@ -198,15 +241,15 @@ h1 {
 }
 
 @media (max-height: 860px) {
-  .app-shell {
-    --board-size-limit: min(calc(100dvh - 11.5rem), calc(100vw - 20rem));
+  .app-shell--board {
+    --board-size-limit: min(calc(100dvh - 14rem), calc(100vw - 20rem));
     gap: 0.7rem;
   }
 }
 
 @media (max-height: 860px) and (max-width: 1080px) {
-  .app-shell {
-    --board-size-limit: min(calc(100dvh - 15.5rem), calc(100vw - 2rem));
+  .app-shell--board {
+    --board-size-limit: min(calc(100dvh - 17.5rem), calc(100vw - 2rem));
   }
 }
 </style>

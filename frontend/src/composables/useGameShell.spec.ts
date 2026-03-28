@@ -102,6 +102,10 @@ function expectStableBoard(board: Cell[][]) {
   })
 }
 
+function cloneGameState(state: GameState): GameState {
+  return JSON.parse(JSON.stringify(state)) as GameState
+}
+
 afterEach(() => {
   vi.useRealTimers()
 })
@@ -599,5 +603,62 @@ describe('shell flow', () => {
     expect(shell.gameState.value.board[0][0]).toMatchObject({ owner: 1, load: 1 })
     expect(shell.gameState.value.activePlayerIndex).toBe(0)
     expect(shell.gameState.value.round).toBe(2)
+  })
+
+  it('preserves the current shell state while a legal page is open', () => {
+    const shell = useGameShell()
+
+    shell.updatePlayerName(1, 'Nova')
+    shell.updatePlayerName(2, 'Atlas')
+    shell.startGame()
+    shell.playCell(0, 0)
+
+    const snapshot = cloneGameState(shell.gameState.value)
+
+    shell.openLegalPage('imprint')
+
+    expect(shell.activeLegalPage.value).toBe('imprint')
+    expect(shell.isCellPlayable(0, 1)).toBe(false)
+
+    shell.playCell(0, 1)
+    expect(shell.gameState.value).toEqual(snapshot)
+
+    shell.closeLegalPage()
+
+    expect(shell.activeLegalPage.value).toBeNull()
+    expect(shell.gameState.value).toEqual(snapshot)
+    expect(shell.isCellPlayable(0, 1)).toBe(true)
+  })
+
+  it('pauses and resumes queued computer turns around legal navigation', async () => {
+    vi.useFakeTimers()
+
+    const shell = useGameShell()
+
+    shell.gameState.value = playMove(
+      startGameSession([
+        createHumanPlayer(1, 'Nova', 'red'),
+        createRandomPlayer(2, 'blue'),
+      ]),
+      0,
+      0,
+    )
+    await Promise.resolve()
+
+    const beforeLegalPage = cloneGameState(shell.gameState.value)
+
+    shell.openLegalPage('privacy-policy')
+    vi.advanceTimersByTime(COMPUTER_TURN_DELAY_MS)
+
+    expect(shell.gameState.value).toEqual(beforeLegalPage)
+    expect(shell.activeLegalPage.value).toBe('privacy-policy')
+
+    shell.closeLegalPage()
+    await Promise.resolve()
+    vi.advanceTimersByTime(COMPUTER_TURN_DELAY_MS)
+
+    expect(shell.activeLegalPage.value).toBeNull()
+    expect(shell.gameState.value.board.flat().filter((cell) => cell.owner === 2)).toHaveLength(1)
+    expect(shell.gameState.value.activePlayerIndex).toBe(0)
   })
 })

@@ -8,6 +8,8 @@ export interface PlayerColor {
 
 export type GamePhase = 'idle' | 'playing'
 
+export type LegalPageId = 'imprint' | 'privacy-policy'
+
 export type ModalState = 'closed' | 'setup' | 'restart-warning' | 'move-result'
 
 export type PlayerController = 'human' | 'computer'
