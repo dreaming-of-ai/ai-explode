@@ -36,6 +36,9 @@ Additionally, screenshots of the feature in action are placed under `papers/done
 - `papers/game-overview.md`  
   canonical high-level overview of the game, including long-lived vision, terminology, and cross-feature context, this document is only maintained manually and must never be changed
 
+- `papers/screen-layout.md`  
+  canonical high-level overview of the screen layout, this document is only maintained manually and must never be changed
+
 - `papers/in-progress`  
   contains the active specification and implementation plan for the feature currently being worked on
 
