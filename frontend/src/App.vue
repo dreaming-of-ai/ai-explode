@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import GameBoard from '@/components/GameBoard.vue'
+import MoveResultDialog from '@/components/MoveResultDialog.vue'
 import PlayerSetup from '@/components/PlayerSetup.vue'
 import PlayerSidebar from '@/components/PlayerSidebar.vue'
 import RestartWarningDialog from '@/components/RestartWarningDialog.vue'
@@ -16,9 +17,12 @@ const {
   canRemovePlayer,
   scoreboardEntries,
   activePlayer,
+  winnerPlayer,
   restartSummary,
   isSetupModalOpen,
   isRestartWarningOpen,
+  isMoveResultOpen,
+  moveResultPopup,
   updatePlayerName,
   updatePlayerColor,
   addPlayer,
@@ -27,13 +31,16 @@ const {
   closeSetupModal,
   continueCurrentGame,
   proceedToSetupFromWarning,
+  dismissMoveResult,
   startGame,
   playCell,
   getAvailableColors,
   isCellPlayable,
 } = useGameShell()
 
-const isModalOpen = computed(() => isSetupModalOpen.value || isRestartWarningOpen.value)
+const isModalOpen = computed(
+  () => isSetupModalOpen.value || isRestartWarningOpen.value || isMoveResultOpen.value,
+)
 </script>
 
 <template>
@@ -62,8 +69,10 @@ const isModalOpen = computed(() => isSetupModalOpen.value || isRestartWarningOpe
         <PlayerSidebar
           :entries="scoreboardEntries"
           :active-player="activePlayer"
+          :winner-player="winnerPlayer"
           :round="gameState.round"
           :phase="gameState.phase"
+          :is-concluded="gameState.isConcluded"
           @new-game="openNewGame"
         />
       </main>
@@ -99,6 +108,20 @@ const isModalOpen = computed(() => isSetupModalOpen.value || isRestartWarningOpe
         :summary="restartSummary"
         @continue-game="continueCurrentGame"
         @start-over="proceedToSetupFromWarning"
+      />
+    </ShellModal>
+
+    <ShellModal
+      v-if="isMoveResultOpen && moveResultPopup"
+      :eyebrow="moveResultPopup.eyebrow"
+      :title="moveResultPopup.title"
+      :description="moveResultPopup.description"
+      :dismissible="false"
+      :close-on-backdrop="false"
+    >
+      <MoveResultDialog
+        :result="moveResultPopup"
+        @close="dismissMoveResult"
       />
     </ShellModal>
   </div>

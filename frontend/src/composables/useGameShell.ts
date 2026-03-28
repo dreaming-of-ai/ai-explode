@@ -5,6 +5,7 @@ import type {
   Cell,
   GameState,
   ModalState,
+  MoveResultPopup,
   PlayerColor,
   PlayerConfig,
   RestartSummary,
@@ -29,6 +30,11 @@ const NEIGHBOR_OFFSETS_CLOCKWISE: ReadonlyArray<readonly [number, number]> = [
   [0, -1],
 ]
 
+export interface PlayedMoveResult {
+  state: GameState
+  resultPopup: MoveResultPopup | null
+}
+
 export function normalizePlayerName(name: string): string {
   return name.trim().replace(/\s+/g, ' ')
 }
@@ -51,6 +57,9 @@ export function createIdleGameState(): GameState {
     board: createEmptyBoard(),
     activePlayerIndex: 0,
     round: 1,
+    erasedPlayerIds: [],
+    winnerPlayerId: null,
+    isConcluded: false,
   }
 }
 
@@ -192,11 +201,14 @@ export function startGameSession(players: SetupPlayer[]): GameState {
     board: createEmptyBoard(),
     activePlayerIndex: 0,
     round: 1,
+    erasedPlayerIds: [],
+    winnerPlayerId: null,
+    isConcluded: false,
   }
 }
 
 export function isCellPlayable(state: GameState, row: number, col: number): boolean {
-  if (state.phase !== 'playing') {
+  if (state.phase !== 'playing' || state.isConcluded) {
     return false
   }
 
@@ -208,7 +220,7 @@ export function isCellPlayable(state: GameState, row: number, col: number): bool
 
   const activePlayer = state.players[state.activePlayerIndex]
 
-  return cell.owner === null || cell.owner === activePlayer.id
+  return cell.owner === null || cell.owner === activePlayer?.id
 }
 
 function cloneBoard(board: Cell[][]): Cell[][] {
@@ -248,11 +260,7 @@ function resolveSingleExplosion(board: Cell[][], row: number, col: number, activ
   origin.load -= adjacentCells.length
 }
 
-export function playMove(state: GameState, row: number, col: number): GameState {
-  if (!isCellPlayable(state, row, col)) {
-    return state
-  }
-
+function resolveBoardAfterMove(state: GameState, row: number, col: number): Cell[][] {
   const board = cloneBoard(state.board)
   const activePlayer = state.players[state.activePlayerIndex]
   const cell = board[row][col]
@@ -268,15 +276,144 @@ export function playMove(state: GameState, row: number, col: number): GameState 
     resolveSingleExplosion(board, row, col, activePlayer.id)
   }
 
-  const activePlayerIndex = (state.activePlayerIndex + 1) % state.players.length
-  const round = state.round + (activePlayerIndex === 0 ? 1 : 0)
+  return board
+}
+
+function shouldEvaluatePostMoveOutcomes(state: GameState): boolean {
+  if (state.phase !== 'playing') {
+    return false
+  }
+
+  return state.round > 1 || state.activePlayerIndex === state.players.length - 1
+}
+
+function getNextActivePlayerIndex(state: GameState, erasedPlayerIds: number[]): number {
+  const erasedPlayerIdSet = new Set(erasedPlayerIds)
+
+  for (let offset = 1; offset <= state.players.length; offset += 1) {
+    const candidateIndex = (state.activePlayerIndex + offset) % state.players.length
+    const candidatePlayer = state.players[candidateIndex]
+
+    if (candidatePlayer && !erasedPlayerIdSet.has(candidatePlayer.id)) {
+      return candidateIndex
+    }
+  }
+
+  return state.activePlayerIndex
+}
+
+function createMoveResultPopup(
+  players: PlayerConfig[],
+  newlyErasedPlayerIds: number[],
+  winnerPlayerId: number | null,
+): MoveResultPopup | null {
+  const messages = [
+    ...newlyErasedPlayerIds.flatMap((playerId) => {
+      const player = players.find((entry) => entry.id === playerId)
+
+      return player ? [`${player.name} has been erased from the board.`] : []
+    }),
+  ]
+
+  if (winnerPlayerId !== null) {
+    const winner = players.find((player) => player.id === winnerPlayerId)
+
+    if (winner) {
+      messages.push(`${winner.name} wins the match.`)
+    }
+  }
+
+  if (messages.length === 0) {
+    return null
+  }
+
+  const hasWinner = winnerPlayerId !== null
 
   return {
+    eyebrow: hasWinner ? 'Match Result' : 'Move Result',
+    title: hasWinner ? 'Match concluded' : 'Players erased',
+    description: hasWinner
+      ? 'The board is locked. Start a new game when you are ready for the next match.'
+      : 'The resolved move removed players from future turn rotation.',
+    messages,
+    winnerPlayerId,
+  }
+}
+
+function finalizeResolvedMove(state: GameState): PlayedMoveResult {
+  let erasedPlayerIds = state.erasedPlayerIds
+  let winnerPlayerId = state.winnerPlayerId
+  let isConcluded = state.isConcluded
+  let resultPopup: MoveResultPopup | null = null
+
+  if (shouldEvaluatePostMoveOutcomes(state)) {
+    const fieldCounts = countFieldsByPlayer(state.players, state.board)
+    const existingErasedPlayerIds = new Set(state.erasedPlayerIds)
+    const newlyErasedPlayerIds = state.players
+      .filter((player) => !existingErasedPlayerIds.has(player.id) && (fieldCounts[player.id] ?? 0) === 0)
+      .map((player) => player.id)
+
+    const erasedPlayerIdSet = new Set([...state.erasedPlayerIds, ...newlyErasedPlayerIds])
+    erasedPlayerIds = state.players
+      .filter((player) => erasedPlayerIdSet.has(player.id))
+      .map((player) => player.id)
+
+    const remainingPlayers = state.players.filter((player) => !erasedPlayerIdSet.has(player.id))
+
+    if (remainingPlayers.length === 1) {
+      winnerPlayerId = remainingPlayers[0].id
+      isConcluded = true
+    }
+
+    resultPopup = createMoveResultPopup(state.players, newlyErasedPlayerIds, winnerPlayerId)
+  }
+
+  if (isConcluded) {
+    return {
+      state: {
+        ...state,
+        erasedPlayerIds,
+        winnerPlayerId,
+        isConcluded,
+      },
+      resultPopup,
+    }
+  }
+
+  const nextActivePlayerIndex = getNextActivePlayerIndex(state, erasedPlayerIds)
+  const round = state.round + (nextActivePlayerIndex <= state.activePlayerIndex ? 1 : 0)
+
+  return {
+    state: {
+      ...state,
+      activePlayerIndex: nextActivePlayerIndex,
+      round,
+      erasedPlayerIds,
+      winnerPlayerId,
+      isConcluded,
+    },
+    resultPopup,
+  }
+}
+
+export function playMoveWithOutcome(state: GameState, row: number, col: number): PlayedMoveResult {
+  if (!isCellPlayable(state, row, col)) {
+    return {
+      state,
+      resultPopup: null,
+    }
+  }
+
+  const board = resolveBoardAfterMove(state, row, col)
+
+  return finalizeResolvedMove({
     ...state,
     board,
-    activePlayerIndex,
-    round,
-  }
+  })
+}
+
+export function playMove(state: GameState, row: number, col: number): GameState {
+  return playMoveWithOutcome(state, row, col).state
 }
 
 export function countFieldsByPlayer(players: PlayerConfig[], board: Cell[][]): Record<number, number> {
@@ -293,11 +430,14 @@ export function countFieldsByPlayer(players: PlayerConfig[], board: Cell[][]): R
 
 export function createScoreboardEntries(state: GameState): ScoreboardEntry[] {
   const fieldCounts = countFieldsByPlayer(state.players, state.board)
+  const erasedPlayerIds = new Set(state.erasedPlayerIds)
 
   return state.players.map((player, index) => ({
     player,
     fields: fieldCounts[player.id] ?? 0,
-    isActive: state.activePlayerIndex === index,
+    isActive: !state.isConcluded && state.activePlayerIndex === index && !erasedPlayerIds.has(player.id),
+    isErased: erasedPlayerIds.has(player.id),
+    isWinner: state.winnerPlayerId === player.id,
   }))
 }
 
@@ -306,16 +446,16 @@ export function createRestartSummary(state: GameState): RestartSummary | null {
     return null
   }
 
-  const activePlayer = state.players[state.activePlayerIndex]
+  const activePlayer = !state.isConcluded ? state.players[state.activePlayerIndex] : null
+  const winner = state.players.find((player) => player.id === state.winnerPlayerId) ?? null
 
   return {
-    contextLabel: activePlayer
-      ? `Round ${state.round} · ${activePlayer.name} to play`
-      : `Round ${state.round}`,
-    entries: createScoreboardEntries(state).map((entry) => ({
-      ...entry,
-      isEliminated: undefined,
-    })),
+    contextLabel: winner
+      ? `Winner · ${winner.name}`
+      : activePlayer
+        ? `Round ${state.round} · ${activePlayer.name} to play`
+        : `Round ${state.round}`,
+    entries: createScoreboardEntries(state),
   }
 }
 
@@ -323,6 +463,7 @@ export function useGameShell() {
   const setupPlayers = ref<SetupPlayer[]>(createInitialSetupPlayers())
   const gameState = ref<GameState>(createIdleGameState())
   const modalState = ref<ModalState>('closed')
+  const moveResultPopup = ref<MoveResultPopup | null>(null)
 
   const setupValidation = computed(() => validateSetupPlayers(setupPlayers.value))
   const canAddPlayer = computed(() => setupPlayers.value.length < MAX_PLAYERS)
@@ -332,13 +473,21 @@ export function useGameShell() {
     gameState.value.phase === 'playing' ? createScoreboardEntries(gameState.value) : [],
   )
   const activePlayer = computed(() =>
-    gameState.value.phase === 'playing'
+    gameState.value.phase === 'playing' && !gameState.value.isConcluded
       ? gameState.value.players[gameState.value.activePlayerIndex] ?? null
+      : null,
+  )
+  const winnerPlayer = computed(() =>
+    gameState.value.phase === 'playing'
+      ? gameState.value.players.find((player) => player.id === gameState.value.winnerPlayerId) ?? null
       : null,
   )
   const restartSummary = computed(() => createRestartSummary(gameState.value))
   const isSetupModalOpen = computed(() => modalState.value === 'setup')
   const isRestartWarningOpen = computed(() => modalState.value === 'restart-warning')
+  const isMoveResultOpen = computed(
+    () => modalState.value === 'move-result' && moveResultPopup.value !== null,
+  )
 
   function updatePlayerName(playerId: number, name: string) {
     setupPlayers.value = setupPlayers.value.map((player) =>
@@ -373,11 +522,20 @@ export function useGameShell() {
   }
 
   function continueCurrentGame() {
-    modalState.value = 'closed'
+    if (modalState.value === 'restart-warning') {
+      modalState.value = 'closed'
+    }
   }
 
   function proceedToSetupFromWarning() {
     modalState.value = 'setup'
+  }
+
+  function dismissMoveResult() {
+    if (modalState.value === 'move-result') {
+      moveResultPopup.value = null
+      modalState.value = 'closed'
+    }
   }
 
   function startGame() {
@@ -386,30 +544,43 @@ export function useGameShell() {
     }
 
     gameState.value = startGameSession(setupPlayers.value)
+    moveResultPopup.value = null
     modalState.value = 'closed'
   }
 
   function playCell(row: number, col: number) {
-    if (gameState.value.phase !== 'playing') {
+    if (gameState.value.phase !== 'playing' || modalState.value !== 'closed') {
       return
     }
 
-    gameState.value = playMove(gameState.value, row, col)
+    const moveResult = playMoveWithOutcome(gameState.value, row, col)
+    gameState.value = moveResult.state
+
+    if (moveResult.resultPopup) {
+      moveResultPopup.value = moveResult.resultPopup
+      modalState.value = 'move-result'
+      return
+    }
+
+    moveResultPopup.value = null
   }
 
   return {
     setupPlayers,
     gameState,
     modalState,
+    moveResultPopup,
     setupValidation,
     canAddPlayer,
     canRemovePlayer,
     hasActiveGame,
     scoreboardEntries,
     activePlayer,
+    winnerPlayer,
     restartSummary,
     isSetupModalOpen,
     isRestartWarningOpen,
+    isMoveResultOpen,
     updatePlayerName,
     updatePlayerColor,
     addPlayer,
@@ -418,9 +589,11 @@ export function useGameShell() {
     closeSetupModal,
     continueCurrentGame,
     proceedToSetupFromWarning,
+    dismissMoveResult,
     startGame,
     playCell,
     getAvailableColors: (playerId: number) => getAvailableColors(setupPlayers.value, playerId),
-    isCellPlayable: (row: number, col: number) => isCellPlayable(gameState.value, row, col),
+    isCellPlayable: (row: number, col: number) =>
+      modalState.value === 'closed' && isCellPlayable(gameState.value, row, col),
   }
 }

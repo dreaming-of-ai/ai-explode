@@ -8,7 +8,7 @@ export interface PlayerColor {
 
 export type GamePhase = 'idle' | 'playing'
 
-export type ModalState = 'closed' | 'setup' | 'restart-warning'
+export type ModalState = 'closed' | 'setup' | 'restart-warning' | 'move-result'
 
 export interface SetupPlayer {
   id: number
@@ -36,6 +36,9 @@ export interface GameState {
   board: Cell[][]
   activePlayerIndex: number
   round: number
+  erasedPlayerIds: number[]
+  winnerPlayerId: number | null
+  isConcluded: boolean
 }
 
 export interface SetupValidation {
@@ -47,13 +50,21 @@ export interface ScoreboardEntry {
   player: PlayerConfig
   fields: number
   isActive: boolean
+  isErased: boolean
+  isWinner: boolean
 }
 
-export interface RestartSummaryEntry extends ScoreboardEntry {
-  isEliminated?: boolean
-}
+export type RestartSummaryEntry = ScoreboardEntry
 
 export interface RestartSummary {
   contextLabel: string
   entries: RestartSummaryEntry[]
+}
+
+export interface MoveResultPopup {
+  eyebrow: string
+  title: string
+  description: string
+  messages: string[]
+  winnerPlayerId: number | null
 }

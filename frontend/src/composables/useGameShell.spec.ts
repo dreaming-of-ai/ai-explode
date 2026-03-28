@@ -10,6 +10,7 @@ import {
   getAvailableColors,
   normalizeSetupPlayers,
   playMove,
+  playMoveWithOutcome,
   removeSetupPlayer,
   startGameSession,
   useGameShell,
@@ -21,6 +22,14 @@ function createNamedPlayers(): SetupPlayer[] {
   return [
     { id: 1, name: 'Nova', colorId: 'red' },
     { id: 2, name: 'Atlas', colorId: 'blue' },
+  ]
+}
+
+function createThreeNamedPlayers(): SetupPlayer[] {
+  return [
+    { id: 1, name: 'Nova', colorId: 'red' },
+    { id: 2, name: 'Atlas', colorId: 'blue' },
+    { id: 3, name: 'Vega', colorId: 'green' },
   ]
 }
 
@@ -209,6 +218,71 @@ describe('play flow', () => {
 
     expect(invalidMove).toBe(claimed)
   })
+
+  it('does not erase players or declare a winner before the opening round is complete', () => {
+    const board = createEmptyBoard()
+    setBoardCell(board, 0, 0, { owner: 1, load: 3 })
+    setBoardCell(board, 0, 1, { owner: 2, load: 1 })
+
+    const result = playMoveWithOutcome(createPlayingState(board), 0, 0)
+
+    expect(result.resultPopup).toBeNull()
+    expect(result.state.erasedPlayerIds).toEqual([])
+    expect(result.state.winnerPlayerId).toBeNull()
+    expect(result.state.isConcluded).toBe(false)
+    expect(result.state.activePlayerIndex).toBe(1)
+    expect(result.state.round).toBe(1)
+  })
+
+  it('erases newly fieldless players, shows one popup, and skips them in turn rotation from round two onward', () => {
+    const board = createEmptyBoard()
+    setBoardCell(board, 0, 0, { owner: 1, load: 3 })
+    setBoardCell(board, 0, 1, { owner: 2, load: 1 })
+    setBoardCell(board, 2, 2, { owner: 3, load: 1 })
+
+    const state: GameState = {
+      ...startGameSession(createThreeNamedPlayers()),
+      board,
+      activePlayerIndex: 0,
+      round: 2,
+    }
+
+    const result = playMoveWithOutcome(state, 0, 0)
+
+    expect(result.state.erasedPlayerIds).toEqual([2])
+    expect(result.state.winnerPlayerId).toBeNull()
+    expect(result.state.isConcluded).toBe(false)
+    expect(result.state.activePlayerIndex).toBe(2)
+    expect(result.state.round).toBe(2)
+    expect(result.resultPopup).toMatchObject({
+      messages: ['Atlas has been erased from the board.'],
+      winnerPlayerId: null,
+    })
+  })
+
+  it('declares the remaining player the winner, combines messages, and locks the board', () => {
+    const board = createEmptyBoard()
+    setBoardCell(board, 0, 0, { owner: 1, load: 3 })
+    setBoardCell(board, 0, 1, { owner: 2, load: 1 })
+
+    const state: GameState = {
+      ...startGameSession(createNamedPlayers()),
+      board,
+      activePlayerIndex: 0,
+      round: 2,
+    }
+
+    const result = playMoveWithOutcome(state, 0, 0)
+
+    expect(result.state.erasedPlayerIds).toEqual([2])
+    expect(result.state.winnerPlayerId).toBe(1)
+    expect(result.state.isConcluded).toBe(true)
+    expect(result.resultPopup?.messages).toEqual([
+      'Atlas has been erased from the board.',
+      'Nova wins the match.',
+    ])
+    expect(playMove(result.state, 1, 1)).toBe(result.state)
+  })
 })
 
 describe('shell flow', () => {
@@ -245,8 +319,49 @@ describe('shell flow', () => {
       contextLabel: 'Round 1 · Atlas to play',
     })
     expect(summary?.entries).toEqual([
-      expect.objectContaining({ player: expect.objectContaining({ name: 'Nova' }), fields: 1, isActive: false }),
-      expect.objectContaining({ player: expect.objectContaining({ name: 'Atlas' }), fields: 0, isActive: true }),
+      expect.objectContaining({
+        player: expect.objectContaining({ name: 'Nova' }),
+        fields: 1,
+        isActive: false,
+        isErased: false,
+        isWinner: false,
+      }),
+      expect.objectContaining({
+        player: expect.objectContaining({ name: 'Atlas' }),
+        fields: 0,
+        isActive: true,
+        isErased: false,
+        isWinner: false,
+      }),
     ])
+  })
+
+  it('opens one move-result modal and keeps the next eligible player queued after dismissal', () => {
+    const shell = useGameShell()
+    const board = createEmptyBoard()
+
+    setBoardCell(board, 0, 0, { owner: 1, load: 3 })
+    setBoardCell(board, 0, 1, { owner: 2, load: 1 })
+    setBoardCell(board, 2, 2, { owner: 3, load: 1 })
+
+    shell.gameState.value = {
+      ...startGameSession(createThreeNamedPlayers()),
+      board,
+      activePlayerIndex: 0,
+      round: 2,
+    }
+
+    shell.playCell(0, 0)
+
+    expect(shell.modalState.value).toBe('move-result')
+    expect(shell.moveResultPopup.value?.messages).toEqual(['Atlas has been erased from the board.'])
+    expect(shell.gameState.value.activePlayerIndex).toBe(2)
+    expect(shell.isCellPlayable(2, 2)).toBe(false)
+
+    shell.dismissMoveResult()
+
+    expect(shell.modalState.value).toBe('closed')
+    expect(shell.moveResultPopup.value).toBeNull()
+    expect(shell.isCellPlayable(2, 2)).toBe(true)
   })
 })

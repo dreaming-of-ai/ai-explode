@@ -4,13 +4,31 @@ import type { GamePhase, PlayerConfig, ScoreboardEntry } from '@/types/game'
 defineProps<{
   entries: ScoreboardEntry[]
   activePlayer: PlayerConfig | null
+  winnerPlayer: PlayerConfig | null
   round: number
   phase: GamePhase
+  isConcluded: boolean
 }>()
 
 const emit = defineEmits<{
   (event: 'new-game'): void
 }>()
+
+function getPlayerStatus(entry: ScoreboardEntry): string {
+  if (entry.isWinner) {
+    return 'Winner'
+  }
+
+  if (entry.isErased) {
+    return 'Erased'
+  }
+
+  if (entry.isActive) {
+    return 'To play'
+  }
+
+  return 'In play'
+}
 </script>
 
 <template>
@@ -25,7 +43,7 @@ const emit = defineEmits<{
     </button>
 
     <section
-      v-if="phase === 'playing' && activePlayer"
+      v-if="phase === 'playing' && !isConcluded && activePlayer"
       class="turn-card panel"
       :style="{
         '--active-primary': activePlayer.color.primary,
@@ -38,6 +56,20 @@ const emit = defineEmits<{
       <p class="turn-meta">Round {{ round }}</p>
     </section>
 
+    <section
+      v-else-if="phase === 'playing' && winnerPlayer"
+      class="turn-card panel is-concluded"
+      :style="{
+        '--active-primary': winnerPlayer.color.primary,
+        '--active-light': winnerPlayer.color.light,
+        '--active-dark': winnerPlayer.color.dark,
+      }"
+    >
+      <p class="eyebrow">Winner</p>
+      <h2>{{ winnerPlayer.name }}</h2>
+      <p class="turn-meta">Match concluded. Start a new game to play again.</p>
+    </section>
+
     <section class="score-card panel">
       <div class="score-header">
         <div>
@@ -46,7 +78,9 @@ const emit = defineEmits<{
         </div>
         <p class="score-note">
           {{
-            phase === 'playing'
+            phase === 'playing' && isConcluded
+              ? 'The board is locked until you begin the next match.'
+              : phase === 'playing'
               ? 'Updates after every valid move.'
               : 'Current progress: board-first shell, modal setup, guarded restart, and turn rotation.'
           }}
@@ -61,7 +95,11 @@ const emit = defineEmits<{
           v-for="entry in entries"
           :key="entry.player.id"
           class="score-item"
-          :class="{ 'is-active': entry.isActive }"
+          :class="{
+            'is-active': entry.isActive,
+            'is-erased': entry.isErased,
+            'is-winner': entry.isWinner,
+          }"
           :style="{
             '--player-primary': entry.player.color.primary,
             '--player-light': entry.player.color.light,
@@ -72,7 +110,7 @@ const emit = defineEmits<{
             <span class="player-mark">{{ entry.player.initials }}</span>
             <div class="score-player-info">
               <p>{{ entry.player.name }}</p>
-              <span>{{ entry.player.color.name }}</span>
+              <span>{{ entry.player.color.name }} · {{ getPlayerStatus(entry) }}</span>
             </div>
           </div>
 
@@ -152,6 +190,12 @@ const emit = defineEmits<{
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--active-light) 48%, transparent), transparent 38%),
     linear-gradient(150deg, color-mix(in srgb, var(--active-dark) 72%, #09111f), rgba(6, 11, 26, 0.95));
+}
+
+.turn-card.is-concluded {
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--active-light) 62%, transparent), transparent 40%),
+    linear-gradient(150deg, color-mix(in srgb, var(--active-primary) 18%, #09111f), rgba(6, 11, 26, 0.95));
 }
 
 .eyebrow {
@@ -235,6 +279,18 @@ h3 {
 .score-item.is-active {
   border-color: color-mix(in srgb, var(--player-primary) 72%, white);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--player-primary) 40%, transparent);
+}
+
+.score-item.is-erased {
+  opacity: 0.64;
+  border-style: dashed;
+}
+
+.score-item.is-winner {
+  border-color: color-mix(in srgb, var(--player-primary) 82%, white);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--player-primary) 45%, transparent),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .score-player {

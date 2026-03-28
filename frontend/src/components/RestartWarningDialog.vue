@@ -42,8 +42,12 @@ const emit = defineEmits<{
               <p>{{ entry.player.name }}</p>
               <span>
                 {{
-                  entry.isEliminated
-                    ? 'Eliminated'
+                  entry.isWinner
+                    ? 'Winner'
+                    : entry.isErased
+                      ? 'Erased'
+                      : summary?.contextLabel.startsWith('Winner')
+                        ? 'Still standing'
                     : entry.isActive
                       ? 'To play'
                       : 'In play'
@@ -57,7 +61,7 @@ const emit = defineEmits<{
       </ul>
 
       <p class="future-note">
-        Elimination status is wired into this summary and will populate here once that gameplay state lands.
+        This summary reflects live erased and winner state, so the next setup choice stays grounded in the current match.
       </p>
     </section>
 

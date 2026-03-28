@@ -19,3 +19,7 @@
 ## 2026-03-28 Default Board Size Alignment
 
 - Board rendering should derive its column count from the live board data instead of fixed CSS literals. That keeps presentation aligned with the logical board size and makes later size configurability much cheaper.
+
+## 2026-03-28 Post-Move Outcome Flow
+
+- Match outcome rules belong in a dedicated post-move step after board resolution, not inside the move-resolution mechanics themselves. Keeping permanent outcome state in `frontend/src/composables/useGameShell.ts` and the one-move popup payload as transient shell UI state makes later explosion upgrades cheaper without duplicating elimination, winner, and turn-skip logic.
