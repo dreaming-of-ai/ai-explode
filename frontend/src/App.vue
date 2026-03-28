@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 
 import GameBoard from '@/components/GameBoard.vue'
+import HeaderIconBar from '@/components/HeaderIconBar.vue'
+import HeaderPopupContent from '@/components/HeaderPopupContent.vue'
 import LegalFooter from '@/components/LegalFooter.vue'
 import LegalPage from '@/components/LegalPage.vue'
 import MoveResultDialog from '@/components/MoveResultDialog.vue'
@@ -10,12 +12,14 @@ import PlayerSidebar from '@/components/PlayerSidebar.vue'
 import RestartWarningDialog from '@/components/RestartWarningDialog.vue'
 import ShellModal from '@/components/ShellModal.vue'
 import { useGameShell } from '@/composables/useGameShell'
+import { HEADER_POPUP_DEFINITIONS, HEADER_POPUP_ENTRIES } from '@/data/headerPopups'
 import { getLegalPageDocument, LEGAL_PAGE_LINKS } from '@/data/legalPages'
 
 const {
   setupPlayers,
   gameState,
   activeLegalPage,
+  activeHeaderPopup,
   setupValidation,
   canAddPlayer,
   canRemovePlayer,
@@ -26,6 +30,7 @@ const {
   isSetupModalOpen,
   isRestartWarningOpen,
   isMoveResultOpen,
+  isHeaderPopupOpen,
   moveResultPopup,
   updatePlayerName,
   updatePlayerController,
@@ -39,6 +44,8 @@ const {
   proceedToSetupFromWarning,
   openLegalPage,
   closeLegalPage,
+  openHeaderPopup,
+  closeHeaderPopup,
   dismissMoveResult,
   startGame,
   playCell,
@@ -50,8 +57,15 @@ const isBoardShellVisible = computed(() => activeLegalPage.value === null)
 const activeLegalDocument = computed(() =>
   activeLegalPage.value ? getLegalPageDocument(activeLegalPage.value) : null,
 )
+const activeHeaderPopupDefinition = computed(() =>
+  activeHeaderPopup.value ? HEADER_POPUP_DEFINITIONS[activeHeaderPopup.value] : null,
+)
 const isModalOpen = computed(
-  () => isSetupModalOpen.value || isRestartWarningOpen.value || isMoveResultOpen.value,
+  () =>
+    isSetupModalOpen.value ||
+    isRestartWarningOpen.value ||
+    isMoveResultOpen.value ||
+    isHeaderPopupOpen.value,
 )
 </script>
 
@@ -71,6 +85,14 @@ const isModalOpen = computed(
           <h1>AI Explode</h1>
           <p class="brand-subtitle">A Tactical Chain-Reaction Game</p>
         </div>
+
+        <HeaderIconBar
+          v-if="isBoardShellVisible"
+          class="header-actions"
+          :entries="HEADER_POPUP_ENTRIES"
+          :active-popup="activeHeaderPopup"
+          @open="openHeaderPopup"
+        />
       </header>
 
       <main class="shell-main">
@@ -159,6 +181,15 @@ const isModalOpen = computed(
         @close="dismissMoveResult"
       />
     </ShellModal>
+
+    <ShellModal
+      v-if="isHeaderPopupOpen && activeHeaderPopupDefinition && activeHeaderPopup"
+      :eyebrow="''"
+      :title="activeHeaderPopupDefinition.title"
+      @close="closeHeaderPopup"
+    >
+      <HeaderPopupContent :popup-id="activeHeaderPopup" />
+    </ShellModal>
   </div>
 </template>
 
@@ -184,7 +215,10 @@ const isModalOpen = computed(
 }
 
 .app-header {
-  display: block;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
 }
 
 .shell-main {
@@ -194,6 +228,12 @@ const isModalOpen = computed(
 
 .brand-block {
   min-width: 0;
+  flex: 1 1 auto;
+}
+
+.header-actions {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
 }
 
 h1,
@@ -231,6 +271,16 @@ h1 {
 
   .shell-layout {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 840px) {
+  .app-header {
+    flex-wrap: wrap;
+  }
+
+  .header-actions {
+    width: 100%;
   }
 }
 

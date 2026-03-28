@@ -15,6 +15,7 @@
 ## 2026-03-28 Explosion Resolution
 
 - Gameplay rules and score updates are both anchored in `frontend/src/composables/useGameShell.ts`. Keeping the scoreboard derived from final board ownership avoids duplicate score state and keeps board colors and counts synchronized after captures.
+- In the sweep-based rules, load distribution can enter a repeating cycle after one player already owns every occupied field. `frontend/src/composables/useGameShell.ts` needs to short-circuit into the existing winner flow at that point, otherwise autoplay matches can freeze waiting for a stable board state that never arrives.
 
 ## 2026-03-28 Default Board Size Alignment
 
@@ -35,3 +36,7 @@
 ## 2026-03-28 Legal Shell Views
 
 - Non-game shell views such as legal pages should stay as a narrow sibling UI state in `frontend/src/composables/useGameShell.ts`, not inside `GameState`. That preserves the live match across view switches and gives the existing computer-turn watcher one place to pause automation whenever gameplay is temporarily hidden.
+
+## 2026-03-28 Header Popup Shell State
+
+- Secondary shell popups fit best as another case in the shared `modalState` flow instead of local component state. Reusing the same modal gate in `frontend/src/composables/useGameShell.ts` automatically pauses queued computer turns, keeps the board inert, and prevents popup behavior from drifting away from setup, restart-warning, and move-result dialogs.

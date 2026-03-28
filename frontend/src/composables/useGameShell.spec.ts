@@ -76,6 +76,17 @@ function setBoardCell(
   }
 }
 
+function setBoardSnapshot(
+  board: Cell[][],
+  snapshot: ReadonlyArray<ReadonlyArray<readonly [number | null, number]>>,
+) {
+  snapshot.forEach((boardRow, row) => {
+    boardRow.forEach(([owner, load], col) => {
+      setBoardCell(board, row, col, { owner, load })
+    })
+  })
+}
+
 function getAllowedLoad(board: Cell[][], row: number, col: number): number {
   let allowedLoad = 0
 
@@ -443,6 +454,111 @@ describe('play flow', () => {
       'Nova wins the match.',
     ])
   })
+
+  it('concludes the match once one player owns every occupied field, even if later sweeps would cycle', () => {
+    const board = createEmptyBoard()
+
+    setBoardSnapshot(board, [
+      [
+        [2, 2],
+        [2, 5],
+        [2, 5],
+        [2, 2],
+        [2, 5],
+        [2, 4],
+        [2, 5],
+        [2, 1],
+      ],
+      [
+        [2, 3],
+        [2, 3],
+        [2, 5],
+        [2, 8],
+        [2, 6],
+        [2, 8],
+        [2, 5],
+        [2, 5],
+      ],
+      [
+        [2, 4],
+        [2, 5],
+        [2, 7],
+        [2, 6],
+        [2, 5],
+        [2, 6],
+        [2, 6],
+        [2, 5],
+      ],
+      [
+        [2, 4],
+        [2, 8],
+        [2, 7],
+        [2, 2],
+        [2, 7],
+        [2, 3],
+        [2, 6],
+        [2, 1],
+      ],
+      [
+        [2, 4],
+        [2, 5],
+        [2, 7],
+        [2, 8],
+        [2, 8],
+        [2, 1],
+        [2, 7],
+        [2, 4],
+      ],
+      [
+        [2, 4],
+        [2, 8],
+        [2, 8],
+        [2, 6],
+        [2, 8],
+        [2, 2],
+        [1, 8],
+        [1, 2],
+      ],
+      [
+        [2, 3],
+        [2, 2],
+        [2, 6],
+        [2, 7],
+        [2, 6],
+        [1, 6],
+        [1, 7],
+        [1, 1],
+      ],
+      [
+        [2, 2],
+        [2, 5],
+        [2, 2],
+        [2, 1],
+        [2, 4],
+        [1, 5],
+        [1, 4],
+        [1, 2],
+      ],
+    ])
+
+    const state: GameState = {
+      ...startGameSession(createNamedPlayers()),
+      board,
+      activePlayerIndex: 1,
+      round: 154,
+    }
+
+    const result = playMoveWithOutcome(state, 0, 4)
+
+    expect(result.state.erasedPlayerIds).toEqual([1])
+    expect(result.state.winnerPlayerId).toBe(2)
+    expect(result.state.isConcluded).toBe(true)
+    expect(result.state.board.flat().every((cell) => cell.owner === 2)).toBe(true)
+    expect(result.resultPopup?.messages).toEqual([
+      'Nova has been erased from the board.',
+      'Atlas wins the match.',
+    ])
+  })
 })
 
 describe('shell flow', () => {
@@ -558,6 +674,51 @@ describe('shell flow', () => {
     expect(shell.isCellPlayable(2, 2)).toBe(true)
   })
 
+  it('opens and closes header popups without mutating the live match state', () => {
+    const shell = useGameShell()
+
+    shell.updatePlayerName(1, 'Nova')
+    shell.updatePlayerName(2, 'Atlas')
+    shell.startGame()
+    shell.playCell(0, 0)
+
+    const snapshot = cloneGameState(shell.gameState.value)
+
+    shell.openHeaderPopup('gaming-rules')
+
+    expect(shell.modalState.value).toBe('header-popup')
+    expect(shell.activeHeaderPopup.value).toBe('gaming-rules')
+    expect(shell.gameState.value).toEqual(snapshot)
+    expect(shell.isCellPlayable(0, 1)).toBe(false)
+
+    shell.closeHeaderPopup()
+
+    expect(shell.modalState.value).toBe('closed')
+    expect(shell.activeHeaderPopup.value).toBeNull()
+    expect(shell.gameState.value).toEqual(snapshot)
+    expect(shell.isCellPlayable(0, 1)).toBe(true)
+  })
+
+  it('blocks board moves and legal navigation while a header popup is open', () => {
+    const shell = useGameShell()
+
+    shell.updatePlayerName(1, 'Nova')
+    shell.updatePlayerName(2, 'Atlas')
+    shell.startGame()
+    shell.playCell(0, 0)
+
+    const snapshot = cloneGameState(shell.gameState.value)
+
+    shell.openHeaderPopup('information')
+    shell.playCell(0, 1)
+    shell.openLegalPage('imprint')
+
+    expect(shell.modalState.value).toBe('header-popup')
+    expect(shell.activeHeaderPopup.value).toBe('information')
+    expect(shell.activeLegalPage.value).toBeNull()
+    expect(shell.gameState.value).toEqual(snapshot)
+  })
+
   it('automatically plays the first move for an opening random computer player', async () => {
     vi.useFakeTimers()
 
@@ -658,6 +819,40 @@ describe('shell flow', () => {
     vi.advanceTimersByTime(COMPUTER_TURN_DELAY_MS)
 
     expect(shell.activeLegalPage.value).toBeNull()
+    expect(shell.gameState.value.board.flat().filter((cell) => cell.owner === 2)).toHaveLength(1)
+    expect(shell.gameState.value.activePlayerIndex).toBe(0)
+  })
+
+  it('pauses and resumes queued computer turns around header popups', async () => {
+    vi.useFakeTimers()
+
+    const shell = useGameShell()
+
+    shell.gameState.value = playMove(
+      startGameSession([
+        createHumanPlayer(1, 'Nova', 'red'),
+        createRandomPlayer(2, 'blue'),
+      ]),
+      0,
+      0,
+    )
+    await Promise.resolve()
+
+    const beforeHeaderPopup = cloneGameState(shell.gameState.value)
+
+    shell.openHeaderPopup('gaming-rules')
+    vi.advanceTimersByTime(COMPUTER_TURN_DELAY_MS)
+
+    expect(shell.modalState.value).toBe('header-popup')
+    expect(shell.activeHeaderPopup.value).toBe('gaming-rules')
+    expect(shell.gameState.value).toEqual(beforeHeaderPopup)
+
+    shell.closeHeaderPopup()
+    await Promise.resolve()
+    vi.advanceTimersByTime(COMPUTER_TURN_DELAY_MS)
+
+    expect(shell.modalState.value).toBe('closed')
+    expect(shell.activeHeaderPopup.value).toBeNull()
     expect(shell.gameState.value.board.flat().filter((cell) => cell.owner === 2)).toHaveLength(1)
     expect(shell.gameState.value.activePlayerIndex).toBe(0)
   })

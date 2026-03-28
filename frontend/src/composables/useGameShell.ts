@@ -10,6 +10,7 @@ import type {
   Cell,
   ComputerPlayerId,
   GameState,
+  HeaderPopupId,
   LegalPageId,
   ModalState,
   MoveResultPopup,
@@ -345,6 +346,29 @@ function resolveSweep(board: Cell[][], activePlayerId: number): boolean {
   return hadExplosion
 }
 
+function hasSingleOccupiedOwner(board: Cell[][]): boolean {
+  let occupiedOwnerId: number | null = null
+
+  for (const boardRow of board) {
+    for (const cell of boardRow) {
+      if (cell.owner === null) {
+        continue
+      }
+
+      if (occupiedOwnerId === null) {
+        occupiedOwnerId = cell.owner
+        continue
+      }
+
+      if (occupiedOwnerId !== cell.owner) {
+        return false
+      }
+    }
+  }
+
+  return occupiedOwnerId !== null
+}
+
 export function resolveBoardAfterMove(
   state: GameState,
   row: number,
@@ -364,10 +388,17 @@ export function resolveBoardAfterMove(
 
   let sweepCount = 0
   let hadExplosion = false
+  const canShortCircuitOnWinner = shouldEvaluatePostMoveOutcomes(state)
 
   do {
     sweepCount += 1
     hadExplosion = resolveSweep(board, activePlayer.id)
+
+    // Once one player owns every occupied field, later sweeps can only cycle
+    // loads without changing the winner, so we can hand off to outcome logic.
+    if (hadExplosion && canShortCircuitOnWinner && hasSingleOccupiedOwner(board)) {
+      break
+    }
   } while (hadExplosion)
 
   return {
@@ -614,6 +645,7 @@ export function useGameShell() {
   const gameState = ref<GameState>(createIdleGameState())
   const activeLegalPage = ref<LegalPageId | null>(null)
   const modalState = ref<ModalState>('closed')
+  const activeHeaderPopup = ref<HeaderPopupId | null>(null)
   const moveResultPopup = ref<MoveResultPopup | null>(null)
 
   const setupValidation = computed(() => validateSetupPlayers(setupPlayers.value))
@@ -639,6 +671,9 @@ export function useGameShell() {
   const isRestartWarningOpen = computed(() => modalState.value === 'restart-warning')
   const isMoveResultOpen = computed(
     () => modalState.value === 'move-result' && moveResultPopup.value !== null,
+  )
+  const isHeaderPopupOpen = computed(
+    () => modalState.value === 'header-popup' && activeHeaderPopup.value !== null,
   )
 
   function updatePlayerName(playerId: number, name: string) {
@@ -682,6 +717,10 @@ export function useGameShell() {
   }
 
   function openNewGame() {
+    if (modalState.value !== 'closed') {
+      return
+    }
+
     modalState.value = hasActiveGame.value ? 'restart-warning' : 'setup'
   }
 
@@ -713,6 +752,22 @@ export function useGameShell() {
     activeLegalPage.value = null
   }
 
+  function openHeaderPopup(popupId: HeaderPopupId) {
+    if (modalState.value !== 'closed' || activeLegalPage.value !== null) {
+      return
+    }
+
+    activeHeaderPopup.value = popupId
+    modalState.value = 'header-popup'
+  }
+
+  function closeHeaderPopup() {
+    if (modalState.value === 'header-popup') {
+      activeHeaderPopup.value = null
+      modalState.value = 'closed'
+    }
+  }
+
   function dismissMoveResult() {
     if (modalState.value === 'move-result') {
       moveResultPopup.value = null
@@ -726,6 +781,7 @@ export function useGameShell() {
     }
 
     gameState.value = startGameSession(setupPlayers.value)
+    activeHeaderPopup.value = null
     moveResultPopup.value = null
     modalState.value = 'closed'
   }
@@ -803,6 +859,7 @@ export function useGameShell() {
     gameState,
     activeLegalPage,
     modalState,
+    activeHeaderPopup,
     moveResultPopup,
     setupValidation,
     canAddPlayer,
@@ -816,6 +873,7 @@ export function useGameShell() {
     isSetupModalOpen,
     isRestartWarningOpen,
     isMoveResultOpen,
+    isHeaderPopupOpen,
     updatePlayerName,
     updatePlayerController,
     updateComputerPlayer,
@@ -828,6 +886,8 @@ export function useGameShell() {
     proceedToSetupFromWarning,
     openLegalPage,
     closeLegalPage,
+    openHeaderPopup,
+    closeHeaderPopup,
     dismissMoveResult,
     startGame,
     playCell,

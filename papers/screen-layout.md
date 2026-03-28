@@ -62,6 +62,18 @@ A vertical column to the right of the board holds action cards and contextual in
 
 ---
 
+## Last Move Indicator
+
+After a player places a load, the affected cell receives a brief entrance animation (a subtle scale-up or pop effect) to 
+draw immediate attention. Once the animation completes, a static highlight ring in the active player's color remains 
+visible on the cell until the next move is made. This ensures that both the moment of placement and the location of the 
+last move are clearly communicated, even if a player looked away briefly.
+When a chain reaction occurs, the last-move indicator stays on the cell where the player originally placed their
+load — not on cells affected by explosions. This keeps it clear which cell was the deliberate action versus the 
+resulting chain effects.
+
+---
+
 ## 5. Footer
 
 A single-line footer is placed at the very bottom of the viewport. It contains two text links separated by a centered dot:
