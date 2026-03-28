@@ -2,61 +2,87 @@
 
 ## Idea
 
-`AI Explode` is a game project centered around a type of gameplay I personally enjoy.
+**AI Explode** is a game project centered around a type of gameplay I personally enjoy.
+Details can be found in the [Game Overview](/papers/game-overview.md).
 
-In parallel, the project serves as a practical demonstration of how to build and operate an agentic development environment with `Codex` or `Claude Code`. Beyond developing the game itself, the project also captures the surrounding workflow: creating specifications, deriving implementation plans, executing changes in a controlled way, and reviewing uncommitted work before it is committed.
+In parallel, the project serves as a practical demonstration of how to build and operate an agentic development environment with **Codex** and **Claude Code**.
+Beyond developing the game itself, the project also captures the surrounding workflow: creating specifications, deriving implementation plans, and executing changes in a controlled way.
 
 ## Testing (Black Box)
 
-Tests are implemented using *Claude Opus 4.6* and the corresponding agents in the testing project.
-The first agent is creating a Gherkin test feature from a simple description and the specifications.
-The second agent is running the test and reporting the results.
+End-to-end tests are implemented using **Claude Opus 4.6** and the corresponding agents in the testing project.
+The first agent creates Gherkin test features from a simple description and the specifications.
+The second agent creates _Playwright_ tests that can be easily executed.
 
-The testing project lives in its own repository under: https://github.com/dreaming-of-ai/ai-explode-testing
+The testing project is completely separated and lives in its own repository: https://github.com/dreaming-of-ai/ai-explode-testing
 
 ## Lessons Learned
 
-### AGENT.md file
+### AGENTS.md File
 
-The *AGENT.md* must be located top-level and not below the `.agent`-directory for `Codex` to pick it up.
-This means the first three sessions have been done without the AI picking up the *AGENT.md* file.
+The `AGENTS.md` must be located at the top level and not below the `.agent` directory for **Codex** to pick it up.
+This means the first three sessions were done without the AI picking up the `AGENTS.md` file.
 
-## Tracking Progress & Time (overall 7h 15m)
+## Tracking Progress & Time (overall 9h 15m)
 
-### Session 4 - 2026-03-27 / 1h 30m
+### Session 5 – 2026-03-28 / 2h
 
-#### Testing
+#### General
 
-- Added basic smoke test.
-- Added test for game creation with two players and simple moves.
-- Added test for game creation and handling illegal moves.
+The following work was done with **Claude Code**:
 
-### Session 3 - 2026-03-26 / 2h 30m
+- Updated `game-overview.md` to reflect changes to board size and to prepare for future additions.
 
 #### Implementation
 
-- Created the first specification with `Codex` and `GPT 5.4 Medium` using the `specification-writer` skill.
-- This was about cleaning up the initial optic, making the board and the overall app responsive, and moving the *New Game* screen to a popup.
-- Results have been ok so far, but one redo was needed.
-- Then several minor graphical changes have been done with the need to switch to `GPT 5.4 High` for some of the CSS work needed.
-- Maybe re-specifying those changes would have been better, but it is always tempting to just tell the AI what to do right away.
+Specification, planning, and implementation tasks were performed with **Codex** and **GPT-5.4 High** (no re-work was needed):
+
+- Refactored from a 10×10 board to an 8×8 board.
+- Implemented explosion of an individual cell, not yet considering chain reactions.
+- Implemented elimination of an individual player from the game.
+- Implemented the game's end condition.
+
+#### Testing
+
+Tests were written with **Claude Code** and **Claude Opus 4.6** (no re-work was needed):
+
+- Added a new test for player elimination.
+- Added a new test for the game's end condition.
+
+### Session 4 – 2026-03-27 / 1h 30m
+
+#### Testing
+
+- Added a basic smoke test.
+- Added a test for game creation with two players and simple moves.
+- Added a test for game creation and handling of illegal moves.
+
+### Session 3 – 2026-03-26 / 2h 30m
+
+#### Implementation
+
+- Created the first specification with **Codex** and **GPT-5.4 Medium** using the `specification-writer.md` skill.
+- Covered cleaning up the initial layout, making the board and the overall app responsive, and moving the *New Game* screen to a popup.
+- Results were acceptable, though one redo was required.
+- Several minor graphical changes followed, requiring a switch to **GPT-5.4 High** for some CSS work.
+- Retrospectively, re-specifying those changes would have been better — but it is always tempting to just instruct the AI directly.
 - Introduced self-learning using a `LEARNINGS.md` file.
 
 #### Testing
 
-- In parallel a separate testing project has been set up that is based on `Claude` and lifes in its own repository. This was done using `Claude sonnet 4.6`.
-- The idea of the testing project is having the AI writing Playwright tests for the game in Gherkin style and then running them. Therefore two separate agents have been configured in the testing project.
+- In parallel, a separate testing project was set up using **Claude Sonnet 4.6**, living in its own repository.
+- The idea is to have the AI write Playwright tests in Gherkin style and then execute them. Two separate agents have been configured in the testing project for this purpose.
 
-### Session 2 - 2026-03-25 / 2h
+### Session 2 – 2026-03-25 / 2h
 
-- Used _Claude Opus_ to write the `game-overview.md` file containing the game's description.
-- Used _Claude Opus_ to write specification `2026-03-25_SPEC_game-shell-player-setup.md` for initial implementation, then used `Codex` with `GPT 5.4 High` to create the implementation plan and execute it.
+- Used **Claude Opus** to write `game-overview.md` containing the game's description.
+- Used **Claude Opus** to write specification `2026-03-25_SPEC_game-shell-player-setup.md` for the initial implementation, then used **Codex** with **GPT-5.4 High** to create the implementation plan and execute it.
 
-> **Note:** The initial Vue implementation had one bug due to an `Uncaught TypeError`. This was fixed in a single round trip and the initial functionality worked flawlessly afterwards. The board is not yet responsive and does not adjust to the browser window size. This will be addressed in a refinement of this first story.
+> **Note:** The initial Vue implementation had one bug due to an `Uncaught TypeError`. This was fixed in a single round trip and the initial functionality worked flawlessly afterwards. The board is not yet responsive and does not adjust to the browser window size — this will be addressed in a refinement of this first story.
 
-### Session 1 - 2026-03-17 / 1h 15m
+### Session 1 – 2026-03-17 / 1h 15m
 
-Used `ChatGPT 5.4 Thinking` to prepare initial versions of:
+Used **ChatGPT** to prepare initial versions of:
 
 - The project layout and tech stack
 - `AGENTS.md`
