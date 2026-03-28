@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import {
   addSetupPlayer,
+  createEmptyBoard,
   createInitialSetupPlayers,
   createRestartSummary,
+  createScoreboardEntries,
   getAvailableColors,
   normalizeSetupPlayers,
   playMove,
@@ -12,13 +14,32 @@ import {
   useGameShell,
   validateSetupPlayers,
 } from '@/composables/useGameShell'
-import type { SetupPlayer } from '@/types/game'
+import type { Cell, GameState, SetupPlayer } from '@/types/game'
 
 function createNamedPlayers(): SetupPlayer[] {
   return [
     { id: 1, name: 'Nova', colorId: 'red' },
     { id: 2, name: 'Atlas', colorId: 'blue' },
   ]
+}
+
+function createPlayingState(board: Cell[][] = createEmptyBoard()): GameState {
+  return {
+    ...startGameSession(createNamedPlayers()),
+    board,
+  }
+}
+
+function setBoardCell(
+  board: Cell[][],
+  row: number,
+  col: number,
+  overrides: Partial<Pick<Cell, 'owner' | 'load'>>,
+) {
+  board[row][col] = {
+    ...board[row][col],
+    ...overrides,
+  }
 }
 
 describe('setup validation', () => {
@@ -95,6 +116,81 @@ describe('play flow', () => {
     const reinforced = playMove(opponentMove, 0, 0)
 
     expect(reinforced.board[0][0]).toMatchObject({ owner: 1, load: 2 })
+  })
+
+  it('resolves one corner explosion, transfers ownership, updates scores, and stops there', () => {
+    const board = createEmptyBoard()
+    setBoardCell(board, 0, 0, { owner: 1, load: 3 })
+    setBoardCell(board, 0, 1, { owner: 2, load: 2 })
+    setBoardCell(board, 1, 1, { owner: 2, load: 8 })
+
+    const resolved = playMove(createPlayingState(board), 0, 0)
+
+    expect(resolved.board[0][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolved.board[0][1]).toMatchObject({ owner: 1, load: 3 })
+    expect(resolved.board[1][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolved.board[1][1]).toMatchObject({ owner: 1, load: 9 })
+    expect(resolved.board[0][2]).toMatchObject({ owner: null, load: 0 })
+    expect(resolved.activePlayerIndex).toBe(1)
+    expect(resolved.round).toBe(1)
+
+    expect(createScoreboardEntries(resolved)).toEqual([
+      expect.objectContaining({ player: expect.objectContaining({ id: 1 }), fields: 4, isActive: false }),
+      expect.objectContaining({ player: expect.objectContaining({ id: 2 }), fields: 0, isActive: true }),
+    ])
+  })
+
+  it('explodes only the five valid neighbors for an edge cell', () => {
+    const board = createEmptyBoard()
+    setBoardCell(board, 0, 4, { owner: 1, load: 5 })
+
+    const resolved = playMove(createPlayingState(board), 0, 4)
+
+    expect(resolved.board[0][4]).toMatchObject({ owner: 1, load: 1 })
+
+    ;[
+      [0, 3],
+      [0, 5],
+      [1, 3],
+      [1, 4],
+      [1, 5],
+    ].forEach(([neighborRow, neighborCol]) => {
+      expect(resolved.board[neighborRow][neighborCol]).toMatchObject({ owner: 1, load: 1 })
+    })
+
+    ;[
+      [0, 2],
+      [0, 6],
+      [1, 2],
+      [1, 6],
+      [2, 4],
+    ].forEach(([row, col]) => {
+      expect(resolved.board[row][col]).toMatchObject({ owner: null, load: 0 })
+    })
+  })
+
+  it('explodes to all eight neighbors for an interior cell', () => {
+    const board = createEmptyBoard()
+    setBoardCell(board, 4, 4, { owner: 1, load: 8 })
+
+    const resolved = playMove(createPlayingState(board), 4, 4)
+
+    expect(resolved.board[4][4]).toMatchObject({ owner: 1, load: 1 })
+
+    ;[
+      [3, 3],
+      [3, 4],
+      [3, 5],
+      [4, 3],
+      [4, 5],
+      [5, 3],
+      [5, 4],
+      [5, 5],
+    ].forEach(([neighborRow, neighborCol]) => {
+      expect(resolved.board[neighborRow][neighborCol]).toMatchObject({ owner: 1, load: 1 })
+    })
+
+    expect(resolved.board[2][2]).toMatchObject({ owner: null, load: 0 })
   })
 
   it("ignores clicks on an opponent's occupied cell", () => {

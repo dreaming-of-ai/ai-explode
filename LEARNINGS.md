@@ -11,3 +11,7 @@
 - Shared modal infrastructure must handle keyboard containment, not just visual presentation. Focus trapping, focus restoration, and making the background shell inert were necessary to meet the modal accessibility requirement.
 - The setup modal copy works best when the outer modal carries the product branding and the inner setup card carries only the task-specific heading. Duplicated titles and explanatory subcopy made the popup feel crowded without improving clarity.
 - Small hover translations near the viewport edge need explicit breathing room. Giving the right-rail primary action a few pixels of top margin prevented its hover state from appearing clipped.
+
+## 2026-03-28 Explosion Resolution
+
+- Gameplay rules and score updates are both anchored in `frontend/src/composables/useGameShell.ts`. Keeping the scoreboard derived from final board ownership avoids duplicate score state and keeps board colors and counts synchronized after captures.

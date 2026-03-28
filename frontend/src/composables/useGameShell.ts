@@ -17,6 +17,18 @@ export const BOARD_SIZE = 10
 export const MIN_PLAYERS = 2
 export const MAX_PLAYERS = 4
 
+// Preserve the canonical neighbor order for later sweep-based explosion work.
+const NEIGHBOR_OFFSETS_CLOCKWISE: ReadonlyArray<readonly [number, number]> = [
+  [-1, -1],
+  [-1, 0],
+  [-1, 1],
+  [0, 1],
+  [1, 1],
+  [1, 0],
+  [1, -1],
+  [0, -1],
+]
+
 export function normalizePlayerName(name: string): string {
   return name.trim().replace(/\s+/g, ' ')
 }
@@ -199,12 +211,49 @@ export function isCellPlayable(state: GameState, row: number, col: number): bool
   return cell.owner === null || cell.owner === activePlayer.id
 }
 
+function cloneBoard(board: Cell[][]): Cell[][] {
+  return board.map((boardRow) => boardRow.map((cell) => ({ ...cell })))
+}
+
+function getAdjacentCells(board: Cell[][], row: number, col: number): Cell[] {
+  return NEIGHBOR_OFFSETS_CLOCKWISE.flatMap(([rowOffset, colOffset]) => {
+    const neighbor = board[row + rowOffset]?.[col + colOffset]
+
+    return neighbor ? [neighbor] : []
+  })
+}
+
+function getAllowedLoad(board: Cell[][], row: number, col: number): number {
+  return getAdjacentCells(board, row, col).length
+}
+
+function resolveSingleExplosion(board: Cell[][], row: number, col: number, activePlayerId: number) {
+  const origin = board[row]?.[col]
+
+  if (!origin) {
+    return
+  }
+
+  const adjacentCells = getAdjacentCells(board, row, col)
+
+  if (origin.load <= adjacentCells.length) {
+    return
+  }
+
+  adjacentCells.forEach((neighbor) => {
+    neighbor.load += 1
+    neighbor.owner = activePlayerId
+  })
+
+  origin.load -= adjacentCells.length
+}
+
 export function playMove(state: GameState, row: number, col: number): GameState {
   if (!isCellPlayable(state, row, col)) {
     return state
   }
 
-  const board = state.board.map((boardRow) => boardRow.map((cell) => ({ ...cell })))
+  const board = cloneBoard(state.board)
   const activePlayer = state.players[state.activePlayerIndex]
   const cell = board[row][col]
 
@@ -213,6 +262,10 @@ export function playMove(state: GameState, row: number, col: number): GameState 
     cell.load = 1
   } else {
     cell.load += 1
+  }
+
+  if (cell.load > getAllowedLoad(board, row, col)) {
+    resolveSingleExplosion(board, row, col, activePlayer.id)
   }
 
   const activePlayerIndex = (state.activePlayerIndex + 1) % state.players.length
