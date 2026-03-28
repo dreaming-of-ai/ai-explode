@@ -70,3 +70,27 @@ Starting from the **second round**, the game checks for a winner after every tur
 - Sweeps repeat until no explosion occurs in a full pass.
 - Elimination and victory are only checked from round 2 onward, after all sweeps have resolved.
 - A player with no remaining fields is eliminated; the game continues until only one player remains.
+
+---
+
+## Computer Players
+
+### Overview
+
+By default, all players in AI Explode are controlled by human participants sharing the same device or session. 
+However, any player slot can optionally be assigned to a computer player instead. This applies to all player slots 
+simultaneously, making fully automated games – where every player is controlled by the computer – possible as well.
+
+### Configuration
+
+Computer players are configured during game setup. In the setup screen, each player slot offers the option to activate a 
+computer player. When a player slot is switched to computer control, a dropdown list becomes available from which the 
+specific computer player can be selected.
+
+### Computer Player Types
+Each computer player has a distinct playing style and strength level. The available computer players differ in how 
+they evaluate the board, how far ahead they plan, and how aggressively they pursue chain reactions versus territorial 
+expansion. This gives players the flexibility to choose opponents that match their desired level of challenge.
+
+The concrete list of available computer players, including their names, playing styles, and strength ratings, is 
+defined separately as part of the feature specification for computer player support.
