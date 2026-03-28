@@ -7,7 +7,7 @@ Responsive Board-First Shell and New Game Modal Refinement - Implementation Plan
 ## 2. Summary
 
 This plan covers the next frontend refinement of `AI Explode`: keeping the
-10x10 board visible from first render, moving player setup into a modal,
+8x8 board visible from first render, moving player setup into a modal,
 guarding restarts of unfinished games, tightening responsive layout behavior
 so the board remains visible without page scrolling on supported viewports,
 and updating player color assignment to follow ordered availability with
@@ -142,7 +142,7 @@ Main responsibilities:
 Dependencies:
 
 - target supported viewport matrix
-- understanding of minimum readable board size for the 10x10 grid
+- understanding of minimum readable board size for the 8x8 grid
 
 Major risks:
 

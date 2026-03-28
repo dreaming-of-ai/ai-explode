@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import type { Cell, GamePhase, PlayerConfig } from '@/types/game'
 
 const props = defineProps<{
@@ -20,9 +22,11 @@ function getPlayer(owner: number | null): PlayerConfig | null {
   return props.players.find((player) => player.id === owner) ?? null
 }
 
+const boardColumnCount = computed(() => props.board[0]?.length ?? 0)
+
 function getCellTone(row: number, col: number): 'corner' | 'edge' | 'interior' {
   const atTopOrBottom = row === 0 || row === props.board.length - 1
-  const atLeftOrRight = col === 0 || col === props.board.length - 1
+  const atLeftOrRight = col === 0 || col === (props.board[row]?.length ?? 0) - 1
 
   if (atTopOrBottom && atLeftOrRight) {
     return 'corner'
@@ -47,6 +51,7 @@ function getCellTone(row: number, col: number): 'corner' | 'edge' | 'interior' {
           v-for="(row, rowIndex) in board"
           :key="rowIndex"
           class="board-row"
+          :style="{ gridTemplateColumns: `repeat(${boardColumnCount || row.length}, minmax(0, 1fr))` }"
         >
           <button
             v-for="cell in row"
@@ -118,7 +123,6 @@ function getCellTone(row: number, col: number): 'corner' | 'edge' | 'interior' {
 
 .board-row {
   display: grid;
-  grid-template-columns: repeat(10, minmax(0, 1fr));
   gap: 0.26rem;
 }
 

@@ -13,7 +13,7 @@ import type {
   SetupValidation,
 } from '@/types/game'
 
-export const BOARD_SIZE = 10
+export const BOARD_SIZE = 8
 export const MIN_PLAYERS = 2
 export const MAX_PLAYERS = 4
 

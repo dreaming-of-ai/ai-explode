@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  BOARD_SIZE,
   addSetupPlayer,
   createEmptyBoard,
   createInitialSetupPlayers,
@@ -43,6 +44,14 @@ function setBoardCell(
 }
 
 describe('setup validation', () => {
+  it('creates an 8x8 board by default', () => {
+    const board = createEmptyBoard()
+
+    expect(board).toHaveLength(BOARD_SIZE)
+    board.forEach((row) => expect(row).toHaveLength(BOARD_SIZE))
+    expect(board.flat()).toHaveLength(BOARD_SIZE * BOARD_SIZE)
+  })
+
   it('starts with two distinct player slots by default', () => {
     const players = createInitialSetupPlayers()
 

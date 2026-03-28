@@ -130,7 +130,7 @@ The "What ships now" content block shall be removed from the shell.
 
 ### FR-11 Responsive Board Visibility
 
-The layout shall be designed so that the full 10x10 board remains visible without requiring page scrolling on supported viewports. Supporting panels, status areas, and controls may compress, stack, collapse, or move into denser layouts as needed, but the board itself must remain fully visible.
+The layout shall be designed so that the full default 8x8 board remains visible without requiring page scrolling on supported viewports. Supporting panels, status areas, and controls may compress, stack, collapse, or move into denser layouts as needed, but the board itself must remain fully visible.
 
 ### FR-12 Responsive Layout Prioritization
 
@@ -289,7 +289,7 @@ Frontend interface impact is expected in:
 
 ## 18. Acceptance Criteria
 
-- Given the app is opened for the first time, when the initial shell renders, then the 10x10 board is already visible without opening setup first.
+- Given the app is opened for the first time, when the initial shell renders, then the default 8x8 board is already visible without opening setup first.
 - Given the initial shell is visible, when the user looks at the primary controls, then a "New Game" button is available.
 - Given the user presses "New Game" with no active game to protect, when the action is processed, then a player setup modal opens.
 - Given the setup modal is open, when the user configures valid players and starts the game, then the modal closes and a fresh game begins on the visible board.

@@ -15,7 +15,7 @@ After this feature, users can:
 1. Open the app and see a polished landing/setup screen.
 2. Configure 2–4 players (name + color).
 3. Start a game session.
-4. See a 10×10 board, the active player indicator, and a live scoreboard.
+4. See a default 8×8 board, the active player indicator, and a live scoreboard.
 5. Click a cell on the board to "claim" it for the active player (simplified: sets ownership with load 1, no reinforcement, no explosions).
 6. Advance to the next player's turn automatically.
 
@@ -33,7 +33,7 @@ This gives a tangible, interactive artifact that validates layout, state managem
 | **Player setup screen** | Configure 2–4 players: name (text input) and color (pick from 4 predefined colors). Validation: no duplicate colors, names required. Add/remove player controls (min 2, max 4). |
 | **Color palette** | Exactly 4 colors to choose from. Each color has a name, a primary hex, and a lighter/darker variant for visual states. Suggested palette (can be refined during implementation): Red `#E63946`, Blue `#457B9D`, Green `#2A9D8F`, Yellow/Amber `#E9C46A`. |
 | **Game start** | "Start Game" button enabled only when all validations pass. Transitions from setup screen to game screen. |
-| **Board rendering** | 10×10 grid. Cells are initially empty. Visual distinction for corner, edge, and interior cells is optional but welcome (subtle border/shade to hint at liberty counts). |
+| **Board rendering** | 8×8 grid. Cells are initially empty. Visual distinction for corner, edge, and interior cells is optional but welcome (subtle border/shade to hint at liberty counts). |
 | **Simplified cell interaction** | Clicking an empty cell assigns it to the active player (ownership + load 1). Clicking an owned cell of the active player increments load by 1. Cells owned by other players are not clickable. No explosion logic. |
 | **Turn indicator** | Clearly visible indicator showing whose turn it is (name + color). |
 | **Scoreboard** | Shows each player's name, color, and count of occupied fields. Updates after every action. |
@@ -126,7 +126,7 @@ interface Cell {
 interface GameState {
   phase: 'setup' | 'playing';
   players: PlayerConfig[];
-  board: Cell[][];      // 10×10
+  board: Cell[][];      // 8×8 default grid
   activePlayerIndex: number; // index into players[]
   round: number;        // increments after all players have had a turn
 }
@@ -174,7 +174,7 @@ interface GameState {
 2. User can add players up to 4 and remove down to 2.
 3. Each player slot has a name input and a color selector showing only available colors.
 4. "Start Game" is disabled until all validations pass.
-5. After starting, the board (10×10 grid) and player panel are visible.
+5. After starting, the board (8×8 grid) and player panel are visible.
 6. The active player is clearly indicated.
 7. Clicking an empty cell assigns it to the active player with load 1; the cell shows the player's color.
 8. Clicking an own cell increments the displayed load.

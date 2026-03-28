@@ -8,7 +8,7 @@ Game Shell & Player Setup - Implementation Plan
 
 This plan covers the first playable frontend increment of `AI Explode`: a
 desktop-oriented application shell, a player setup flow for 2 to 4 players, a
-game start transition, and a live 10x10 board view with simplified turn-based
+game start transition, and a live 8x8 board view with simplified turn-based
 cell claiming. The goal is to deliver a polished interactive vertical slice
 that validates layout, state flow, and core frontend structure without
 implementing explosion mechanics, elimination, win detection, persistence, or
@@ -41,7 +41,7 @@ This plan covers:
 - setup screen for configuring 2 to 4 players
 - predefined player color handling and setup validation
 - game start transition from setup to playing phase
-- 10x10 board rendering with simplified ownership and load display
+- 8x8 board rendering with simplified ownership and load display
 - active player indicator, round tracking, and scoreboard updates
 - turn advancement after valid moves
 - desktop-ready visual polish and responsive behavior for >=1024px widths
@@ -147,7 +147,7 @@ rules.
 
 Main responsibilities:
 
-- render a 10x10 interactive grid
+- render an 8x8 interactive grid
 - display ownership and load values for occupied cells
 - block invalid interactions on opponent-owned cells
 - reflect active player changes immediately after valid moves
@@ -334,7 +334,7 @@ Exit criteria:
 
 ### Task Group C: Game-state composable or equivalent state layer
 
-- C1. Define board initialization for a 10x10 empty grid.
+- C1. Define board initialization for an 8x8 empty grid.
 - C2. Define the `start game` transition that materializes setup into play
   state.
 - C3. Define valid move handling for empty, own, and opponent-owned cells.

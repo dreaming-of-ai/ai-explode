@@ -15,3 +15,7 @@
 ## 2026-03-28 Explosion Resolution
 
 - Gameplay rules and score updates are both anchored in `frontend/src/composables/useGameShell.ts`. Keeping the scoreboard derived from final board ownership avoids duplicate score state and keeps board colors and counts synchronized after captures.
+
+## 2026-03-28 Default Board Size Alignment
+
+- Board rendering should derive its column count from the live board data instead of fixed CSS literals. That keeps presentation aligned with the logical board size and makes later size configurability much cheaper.
