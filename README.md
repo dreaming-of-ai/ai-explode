@@ -8,6 +8,11 @@ Details can be found in the [Game Overview](/papers/game-overview.md).
 In parallel, the project serves as a practical demonstration of how to build and operate an agentic development environment with **Codex** and **Claude Code**.
 Beyond developing the game itself, the project also captures the surrounding workflow: creating specifications, deriving implementation plans, and executing changes in a controlled way.
 
+## Build
+
+npm install
+npm run build
+
 ## Testing (Black Box)
 
 End-to-end tests are implemented using **Claude Opus 4.6** and the corresponding agents in the testing project.

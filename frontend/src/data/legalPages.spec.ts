@@ -37,7 +37,8 @@ describe('legal page data', () => {
       text: 'Impressum',
     })
     expect(flattenedText).toContain('Angaben gemäß § 5 DDG')
-    expect(flattenedText).toContain('{{VORNAME NACHNAME}}')
+    expect(flattenedText).toContain('Thomas Jaspers')
+    expect(flattenedText).toContain('info@ai-explode.de')
     expect(flattenedText).not.toContain('Language Notice')
     expect(flattenedText).not.toContain('Legal Notice / Impressum')
     expect(flattenedText).not.toContain('TODO:')
@@ -54,7 +55,8 @@ describe('legal page data', () => {
       text: 'Datenschutzerklärung',
     })
     expect(flattenedText).toContain('Verantwortlicher im Sinne der Datenschutz-Grundverordnung')
-    expect(flattenedText).toContain('{{ANALYTICS-TOOL}}')
+    expect(flattenedText).toContain('Thomas Jaspers')
+    expect(flattenedText).toContain('{{14 Tagen / 30 Tagen}}')
     expect(flattenedText).not.toContain('Privacy Policy / Datenschutzerklärung')
     expect(flattenedText).not.toContain('Language Notice')
     expect(flattenedText).not.toContain('<!--')

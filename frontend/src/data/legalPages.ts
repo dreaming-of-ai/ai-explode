@@ -65,9 +65,9 @@ export const LEGAL_PAGE_LINKS: readonly LegalPageLink[] = LEGAL_SOURCE_CONFIGS.m
 
 function escapeHtml(text: string): string {
   return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 }
 
 function renderInlineMarkdown(text: string): string {

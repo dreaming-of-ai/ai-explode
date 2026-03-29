@@ -83,8 +83,8 @@ function getPlayerRole(player: PlayerConfig): string {
     <section class="score-card panel">
       <div class="score-header">
         <div>
-          <p class="eyebrow">{{ phase === 'playing' ? 'Scoreboard' : 'Rules in this increment' }}</p>
-          <h3>{{ phase === 'playing' ? 'Occupied fields' : 'Current shell behavior' }}</h3>
+          <p class="eyebrow">{{ phase === 'playing' ? 'Scoreboard' : 'Game Overview' }}</p>
+          <h3>{{ phase === 'playing' ? 'Occupied fields' : 'Chain-Reaction Tactics' }}</h3>
         </div>
         <p class="score-note">
           {{
@@ -92,7 +92,7 @@ function getPlayerRole(player: PlayerConfig): string {
               ? 'The board is locked until you begin the next match.'
               : phase === 'playing'
               ? 'Updates after every valid move.'
-              : 'Current progress: board-first shell, modal setup, guarded restart, and turn rotation.'
+              : 'Open the Gaming Rules popup in the header for the full rules.'
           }}
         </p>
       </div>
@@ -132,9 +132,9 @@ function getPlayerRole(player: PlayerConfig): string {
         v-else
         class="rule-list"
       >
-        <li>Board loads immediately and stays visible before the first match.</li>
-        <li>New Game opens modal setup instead of replacing the whole screen.</li>
-        <li>Claim empty cells, reinforce your own cells, and watch turns rotate automatically.</li>
+        <li>Claim empty fields or reinforce cells you already own.</li>
+        <li>Trigger explosions to spread load and capture neighboring territory.</li>
+        <li>Erase the other players and take over the board to win.</li>
       </ul>
     </section>
   </aside>
