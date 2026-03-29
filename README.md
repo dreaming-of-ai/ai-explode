@@ -2,7 +2,7 @@
 
 ## Idea
 
-**AI Explode** is a game project centered around a type of gameplay I personally enjoy.
+**AI Explode** is a game project inspired by a type of gameplay I've always loved.
 Details can be found in the [Game Overview](/papers/game-overview.md).
 
 In parallel, the project serves as a practical demonstration of how to build and operate an agentic development 
@@ -11,7 +11,7 @@ Beyond developing the game itself, the project also captures the surrounding wor
 deriving implementation plans, and executing changes in a controlled way.
 
 > [!NOTE]  
-> This project is **not** vibe coded, but it shows how to use AI agents to build a non-trivial application in a structured way.
+> This project is **not vibe coded**, but it shows how to use AI agents to build a non-trivial application in a structured way.
 
 ## Build & Run
 
@@ -28,13 +28,25 @@ To run the application locally, use:
 npm run dev
 ```
 
+## Implementation
+
+Implementation is done using **Codex** with **GPT-5.4 Medium** to **GPT-5.4 Extra High** depending on the complexity 
+of the task at hand.
+The implementation workflow is structured around specifications and implementation plans, which are created using the 
+corresponding skills defined.
+The actual implementation is then done using the implementation execution skill, which ensures that changes are made 
+in a controlled way and that the codebase remains stable.
+The code review skill is used to check the changes after implementation and to ensure that they meet the required 
+standards.
+
 ## Testing (Black Box)
 
 End-to-end tests are implemented using **Claude Opus 4.6** and the corresponding agents in the testing project.
-The first agent creates Gherkin test features from a simple description and the specifications.
+The first agent creates _Gherkin_ test features from a simple textual description and the specifications.
 The second agent creates _Playwright_ tests that can be easily executed.
 
-The testing project is completely separated and lives in its own repository: https://github.com/dreaming-of-ai/ai-explode-testing
+The testing project is completely separated and lives in its own repository: 
+https://github.com/dreaming-of-ai/ai-explode-testing
 
 ## Lessons Learned
 
@@ -43,13 +55,52 @@ The testing project is completely separated and lives in its own repository: htt
 The `AGENTS.md` must be located at the top level and not below the `.agent` directory for **Codex** to pick it up.
 This means the first three sessions were done without the AI picking up the `AGENTS.md` file.
 
-## Tracking Progress & Time (overall 9h 15m)
+## Tracking Progress & Time (overall 14h)
+
+### Session 7 – 2026-03-29 / 2h
+
+### General
+
+Used **Opus 4.6**
+- to write the `technical-overview.md` document and starting to describe potential backend features.
+
+#### Implementation
+
+- Added content to info popup.
+- Added possibility to define a delay in the explosions for better visual effects.
+- Added an indication to mark the last move made.
+- Finalized _Impressum_ and _Datenschutz_ pages with personal information.
+- Updating to `VUE 8.0.3`.
+- Preparing live deployment.
+
+#### Testing
+
+- Added a new test for _Impressum_ and _Datenschutz_ pages.
+
+
+### Session 6 – 2026-03-28 / 3h
+
+### General
+
+Used **Opus 4.6**
+
+- to write the content for the _Impressum_ and _Datenschutz_ pages.
+- to write the `screen-layout.md` specification for the layout changes and the new pages.
+- to check potential problems with copyright questions regarding the gameplay.
+
+#### Implementation
+
+- Added the chain reaction mechanism and implemented the logic to handle eliminated players and game ending state.
+- Added **Impressum** and **Datenschutz** pages to comply with german DSGVO regulations.
+- Minor changes to some of the displayed text to improve clarity and user experience.
+- Added icons for functions: _Gaming Rules_, _Information_ and _Settings_.
+- Added the gaming rules from the `game-overview.md` to the _Gaming Rules_ popup.
+- Added basic setting for computer players and adding the first computer player as a _Random Player_
+- Found a game state bug by letting two computer players play against each other for a while. This was fixed using **GPT-5.4 Extra High**.
 
 ### Session 5 – 2026-03-28 / 2h
 
 #### General
-
-The following work was done with **Claude Code**:
 
 - Updated `game-overview.md` to reflect changes to board size and to prepare for future additions.
 
@@ -63,8 +114,6 @@ Specification, planning, and implementation tasks were performed with **Codex** 
 - Implemented the game's end condition.
 
 #### Testing
-
-Tests were written with **Claude Code** and **Claude Opus 4.6** (no re-work was needed):
 
 - Added a new test for player elimination.
 - Added a new test for the game's end condition.
@@ -81,7 +130,7 @@ Tests were written with **Claude Code** and **Claude Opus 4.6** (no re-work was 
 
 #### Implementation
 
-- Created the first specification with **Codex** and **GPT-5.4 Medium** using the `specification-writer.md` skill.
+- Created the first specification using the `specification-writer.md` skill.
 - Covered cleaning up the initial layout, making the board and the overall app responsive, and moving the *New Game* screen to a popup.
 - Results were acceptable, though one redo was required.
 - Several minor graphical changes followed, requiring a switch to **GPT-5.4 High** for some CSS work.
@@ -91,7 +140,7 @@ Tests were written with **Claude Code** and **Claude Opus 4.6** (no re-work was 
 #### Testing
 
 - In parallel, a separate testing project was set up using **Claude Sonnet 4.6**, living in its own repository.
-- The idea is to have the AI write Playwright tests in Gherkin style and then execute them. Two separate agents have been configured in the testing project for this purpose.
+- The idea is to have the AI write _Playwright_ tests in _Gherkin_ style and then execute them. Two separate agents have been configured in the testing project for this purpose.
 
 ### Session 2 – 2026-03-25 / 2h
 
@@ -100,9 +149,7 @@ Tests were written with **Claude Code** and **Claude Opus 4.6** (no re-work was 
 
 > **Note:** The initial Vue implementation had one bug due to an `Uncaught TypeError`. This was fixed in a single round trip and the initial functionality worked flawlessly afterwards. The board is not yet responsive and does not adjust to the browser window size — this will be addressed in a refinement of this first story.
 
-### Session 1 – 2026-03-17 / 1h 15m
-
-Used **ChatGPT** to prepare initial versions of:
+### Session 1 – 2026-03-17 / 1h
 
 - The project layout and tech stack
 - `AGENTS.md`
