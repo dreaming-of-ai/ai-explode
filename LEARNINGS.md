@@ -44,3 +44,7 @@
 ## 2026-03-29 Delayed Explosion Playback
 
 - Presentation-paced move playback works best with a separate displayed board in `frontend/src/composables/useGameShell.ts`. Keeping `gameState` authoritative until the move fully resolves lets the board animate intermediate explosion steps without advancing the turn, drifting the scoreboard, or firing result popups against an unstable board.
+
+## 2026-03-29 Frontend Toolchain Baseline
+
+- The frontend now targets the Vite 8 and Vitest 4 toolchain. Work on `frontend` should assume Node `^20.19.0 || >=22.12.0`, and the current `frontend/vite.config.ts` survives that upgrade without extra compatibility overrides.
