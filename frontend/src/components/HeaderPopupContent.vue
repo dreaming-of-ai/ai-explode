@@ -69,6 +69,7 @@ const isSettingsPopup = computed(() => props.popupId === 'settings')
         <h3>Follow each chain reaction</h3>
         <p>
           Choose how much time to leave between consecutive explosion-driven cell updates.
+          This affects only the visual pacing of the animation and has no impact on gameplay or the outcome of the game.
         </p>
       </div>
 

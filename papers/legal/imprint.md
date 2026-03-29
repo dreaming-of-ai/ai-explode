@@ -15,29 +15,21 @@ Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz)
 
 ### Verantwortlich
 
-<!-- TODO: Ersetzen Sie die Platzhalter durch Ihre tatsächlichen Daten -->
-
-**{{VORNAME NACHNAME}}**
-{{Straße Hausnummer}}
-{{PLZ Ort}}
+**Thomas Jaspers**,
+Erlenstraße 9,
+47198 Duisburg,
 Deutschland
 
 ### Kontakt
 
-E-Mail: {{ihre-email@example.com}}
-Telefon: {{+49 XXX XXXXXXX}} *(optional, aber empfohlen)*
+E-Mail: info@ai-explode.de
 
 ### Redaktionell verantwortlich
 
-{{Vorname Nachname}}
-{{Straße Hausnummer}}
-{{PLZ Ort}}
-
-<!-- Falls gewerblich: Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG -->
-<!-- Umsatzsteuer-ID: DE {{XXXXXXXXX}} -->
-
-<!-- Falls im Handelsregister eingetragen: -->
-<!-- Handelsregister: {{Amtsgericht Ort}}, HRB {{XXXXX}} -->
+**Thomas Jaspers**,
+Erlenstraße 9,
+47198 Duisburg,
+Deutschland
 
 ---
 

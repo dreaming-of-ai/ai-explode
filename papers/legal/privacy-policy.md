@@ -15,17 +15,15 @@ to ensure full legal compliance.
 
 ### 1. Verantwortlicher
 
-<!-- TODO: Ersetzen Sie die Platzhalter durch Ihre tatsächlichen Daten -->
-
 Verantwortlicher im Sinne der Datenschutz-Grundverordnung (DSGVO) und anderer
 datenschutzrechtlicher Bestimmungen ist:
 
-**{{VORNAME NACHNAME}}**
-{{Straße Hausnummer}}
-{{PLZ Ort}}
+**Thomas Jaspers**,
+Erlenstraße 9,
+47198 Duisburg,
 Deutschland
 
-E-Mail: {{ihre-email@example.com}}
+E-Mail: info@ai-explode.de
 
 ---
 
@@ -84,9 +82,8 @@ ermöglichen grundlegende Funktionen wie die Zuordnung einer Spielsitzung und
 werden nach Ende der Browser-Sitzung automatisch gelöscht.
 
 **Funktionale Cookies (Präferenz-Cookies)**
-Diese Cookies speichern vom Nutzer gewählte Einstellungen (z. B. bevorzugte
-Spieloptionen) und verbessern so die Nutzungserfahrung. Sie werden für maximal
-{{XX Tage}} gespeichert.
+Es gibt keine funktionalen Cookies, die über die technisch notwendigen hinausgehen. Sollte dies in Zukunft der Fall
+sein, werden wir eine Einwilligung gemäß Art. 6 Abs. 1 lit. a DSGVO i. V. m. § 25 Abs. 1 TDDDG einholen.
 
 #### 4.2 Rechtsgrundlage
 
@@ -105,47 +102,9 @@ alle Funktionen der Anwendung vollumfänglich genutzt werden können.
 
 ---
 
-### 5. Webanalyse
+### 5. WebSocket-Verbindungen (Mehrspieler-Funktionalität)
 
 #### 5.1 Beschreibung und Umfang der Datenverarbeitung
-
-<!-- TODO: Konkreten Analytics-Dienst eintragen (z. B. Matomo, Plausible) -->
-
-Wir setzen {{ANALYTICS-TOOL}} ein, um die Nutzung unserer Anwendung statistisch
-auszuwerten und zu verbessern. {{ANALYTICS-TOOL}} wird auf unseren eigenen Servern
-betrieben (Self-Hosting), sodass keine Daten an Dritte übermittelt werden.
-
-Dabei werden folgende Daten verarbeitet:
-
-- Gekürzte bzw. anonymisierte IP-Adresse
-- Aufgerufene Seiten und Zeitpunkt des Aufrufs
-- Verweildauer
-- Verwendeter Browser und Betriebssystem
-- Herkunftsseite (Referrer)
-
-#### 5.2 Rechtsgrundlage
-
-Sofern {{ANALYTICS-TOOL}} so konfiguriert ist, dass keine Einwilligung
-erforderlich ist (z. B. durch vollständige IP-Anonymisierung und Verzicht auf
-Tracking-Cookies), ist die Rechtsgrundlage Art. 6 Abs. 1 lit. f DSGVO
-(berechtigtes Interesse an der statistischen Analyse zur Verbesserung des
-Angebots).
-
-Andernfalls erfolgt die Verarbeitung auf Grundlage einer Einwilligung gemäß
-Art. 6 Abs. 1 lit. a DSGVO i. V. m. § 25 Abs. 1 TDDDG.
-
-#### 5.3 Widerspruch
-
-<!-- TODO: Opt-Out-Mechanismus beschreiben, z. B. Matomo Opt-Out-iFrame -->
-
-Nutzer können der Erfassung durch {{ANALYTICS-TOOL}} jederzeit widersprechen.
-{{Beschreibung des Opt-Out-Mechanismus}}.
-
----
-
-### 6. WebSocket-Verbindungen (Mehrspieler-Funktionalität)
-
-#### 6.1 Beschreibung und Umfang der Datenverarbeitung
 
 Für die Mehrspieler-Funktionalität nutzt unsere Anwendung WebSocket-Verbindungen.
 WebSockets ermöglichen eine persistente, bidirektionale Kommunikation zwischen dem
@@ -160,14 +119,14 @@ Es ist keine Registrierung oder Anmeldung erforderlich. Ein ggf. vom Nutzer
 eingegebener Anzeigename wird nur für die Dauer der Spielsitzung verwendet und
 nicht dauerhaft gespeichert.
 
-#### 6.2 Rechtsgrundlage
+#### 5.2 Rechtsgrundlage
 
 Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung), da die
 Datenverarbeitung für die Bereitstellung der vom Nutzer angeforderten
 Mehrspieler-Funktionalität erforderlich ist, sowie Art. 6 Abs. 1 lit. f DSGVO
 (berechtigtes Interesse an der technischen Bereitstellung des Spiels).
 
-#### 6.3 Speicherdauer
+#### 5.3 Speicherdauer
 
 Die im Rahmen der WebSocket-Verbindung verarbeiteten Daten werden nur für die
 Dauer der aktiven Spielsitzung vorgehalten. Nach Beendigung der Verbindung werden
@@ -176,32 +135,23 @@ beschriebenen Server-Logfiles erfasst sind.
 
 ---
 
-### 7. Kontaktaufnahme
+### 6. Kontaktaufnahme
 
-#### 7.1 Beschreibung und Umfang der Datenverarbeitung
+#### 6.1 Beschreibung und Umfang der Datenverarbeitung
 
-Auf unserer Anwendung ist ein Kontaktformular vorhanden, welches für die
-elektronische Kontaktaufnahme genutzt werden kann. Nimmt ein Nutzer diese
-Möglichkeit wahr, so werden die im Kontaktformular eingegebenen Daten an uns
-übermittelt und gespeichert. Diese Daten umfassen in der Regel:
-
-- Name (sofern angegeben)
-- E-Mail-Adresse
-- Inhalt der Nachricht
-- Zeitpunkt der Absendung
-
-Alternativ ist eine Kontaktaufnahme über die bereitgestellte E-Mail-Adresse
+Eine Kontaktaufnahme ist über die im Impressum bereitgestellte E-Mail-Adresse
 möglich. In diesem Fall werden die mit der E-Mail übermittelten personenbezogenen
-Daten gespeichert.
+Daten (insbesondere E-Mail-Adresse, Name sofern angegeben, sowie Inhalt der
+Nachricht) gespeichert.
 
-#### 7.2 Rechtsgrundlage
+#### 6.2 Rechtsgrundlage
 
 Rechtsgrundlage für die Verarbeitung der Daten ist Art. 6 Abs. 1 lit. f DSGVO
 (berechtigtes Interesse an der Beantwortung von Anfragen). Zielt der Kontakt auf
 den Abschluss eines Vertrages ab, so ist zusätzliche Rechtsgrundlage Art. 6
 Abs. 1 lit. b DSGVO.
 
-#### 7.3 Speicherdauer
+#### 6.3 Speicherdauer
 
 Die Daten werden gelöscht, sobald sie für die Erreichung des Zweckes ihrer
 Erhebung nicht mehr erforderlich sind. Für personenbezogene Daten aus
@@ -210,7 +160,7 @@ und keine gesetzlichen Aufbewahrungsfristen entgegenstehen.
 
 ---
 
-### 8. Keine Datenübermittlung an Dritte
+### 7. Keine Datenübermittlung an Dritte
 
 Alle in dieser Datenschutzerklärung beschriebenen Datenverarbeitungen finden
 ausschließlich auf unseren eigenen Servern in Deutschland statt. Eine Übermittlung
@@ -219,7 +169,7 @@ denn, wir sind gesetzlich dazu verpflichtet.
 
 ---
 
-### 9. Rechte der betroffenen Person
+### 8. Rechte der betroffenen Person
 
 Ihnen stehen als betroffene Person folgende Rechte gegenüber dem Verantwortlichen zu:
 
@@ -262,18 +212,16 @@ Unbeschadet eines anderweitigen verwaltungsrechtlichen oder gerichtlichen
 Rechtsbehelfs haben Sie das Recht, sich bei einer Datenschutz-Aufsichtsbehörde
 zu beschweren. Die für den Verantwortlichen zuständige Aufsichtsbehörde ist:
 
-<!-- TODO: Zuständige Aufsichtsbehörde eintragen -->
-
-{{Landesbeauftragte/r für Datenschutz und Informationsfreiheit}}
-{{Bundesland}}
-{{Adresse}}
-{{Website}}
-
+Landesbeauftragte für Datenschutz und Informationsfreiheit,
+Nordrhein-Westfalen,
+Kavalleriestr. 2–4,
+40213 Düsseldorf,
+https://www.ldi.nrw.de
 ---
 
-### 10. Aktualität und Änderung dieser Datenschutzerklärung
+### 9. Aktualität und Änderung dieser Datenschutzerklärung
 
-Diese Datenschutzerklärung hat den Stand {{Monat Jahr}}. Aufgrund der
+Diese Datenschutzerklärung hat den Stand März 2026. Aufgrund der
 Weiterentwicklung unserer Anwendung oder aufgrund geänderter gesetzlicher bzw.
 behördlicher Vorgaben kann es notwendig werden, diese Datenschutzerklärung
 anzupassen. Die jeweils aktuelle Fassung ist stets unter dem Menüpunkt
