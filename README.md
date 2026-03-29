@@ -5,13 +5,28 @@
 **AI Explode** is a game project centered around a type of gameplay I personally enjoy.
 Details can be found in the [Game Overview](/papers/game-overview.md).
 
-In parallel, the project serves as a practical demonstration of how to build and operate an agentic development environment with **Codex** and **Claude Code**.
-Beyond developing the game itself, the project also captures the surrounding workflow: creating specifications, deriving implementation plans, and executing changes in a controlled way.
+In parallel, the project serves as a practical demonstration of how to build and operate an agentic development 
+environment with **Codex** and **Claude Code**.
+Beyond developing the game itself, the project also captures the surrounding workflow: creating specifications, 
+deriving implementation plans, and executing changes in a controlled way.
 
-## Build
+> [!NOTE]  
+> This project is **not** vibe coded, but it shows how to use AI agents to build a non-trivial application in a structured way.
 
+## Build & Run
+
+Perform the following steps to build the application:
+
+```
 npm install
 npm run build
+```
+
+To run the application locally, use:
+
+```
+npm run dev
+```
 
 ## Testing (Black Box)
 
