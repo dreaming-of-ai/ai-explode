@@ -98,17 +98,7 @@ defined separately as part of the feature specification for computer player supp
 ---
 
 ## Backend
+The backend is implemented in PHP with a MySQL database. It provides lightweight game statistics
+(total games played, currently active games) and is intended to support remote multiplayer in a later phase.
 
-The backend is implemented in PHP and used to store game statistics and ptentially enable remote games between human players.
-
-Game statistics are stored in a MySQL database with the following structure:
-
-```sql
-CREATE TABLE game_stats (
-    game_id    VARCHAR(36) PRIMARY KEY,  -- UUID aus dem Frontend
-    status     ENUM('active', 'completed', 'abandoned') NOT NULL DEFAULT 'active',
-    move_count INT UNSIGNED NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-```
+Technical details including database schema, API endpoints, and processing rules are documented in `technical-overview.md`.
