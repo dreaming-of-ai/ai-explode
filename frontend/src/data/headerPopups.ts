@@ -11,6 +11,13 @@ export interface RulesSummarySection {
   bullets: string[]
 }
 
+export interface InformationPopupContent {
+  intro: string
+  details: string
+  linkLabel: string
+  linkHref: string
+}
+
 export const HEADER_POPUP_ORDER: HeaderPopupId[] = [
   'gaming-rules',
   'information',
@@ -36,6 +43,16 @@ export const HEADER_POPUP_DEFINITIONS: Record<HeaderPopupId, HeaderPopupDefiniti
 }
 
 export const HEADER_POPUP_ENTRIES = HEADER_POPUP_ORDER.map((popupId) => HEADER_POPUP_DEFINITIONS[popupId])
+
+export const INFORMATION_POPUP_CONTENT: InformationPopupContent = {
+  intro:
+    'AI Explode is a playful project built end to end with the AI coding tools "Codex" and "Claude Code". ' +
+      'These tools have been doing both, the implementation and the testing work, with only a little steering by a human.',
+  details:
+    'If you are curious about the technical side, the project README walks through the architecture, workflow, and development setup in more detail.',
+  linkLabel: 'Read the technical project notes on GitHub',
+  linkHref: 'https://github.com/dreaming-of-ai/ai-explode/blob/main/README.md',
+}
 
 export const GAMING_RULES_SECTIONS: ReadonlyArray<RulesSummarySection> = [
   {

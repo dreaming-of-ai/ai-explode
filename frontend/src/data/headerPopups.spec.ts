@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { HEADER_POPUP_ENTRIES } from '@/data/headerPopups'
+import { HEADER_POPUP_ENTRIES, INFORMATION_POPUP_CONTENT } from '@/data/headerPopups'
 
 describe('header popups data', () => {
   it('keeps the required header action order and titles', () => {
@@ -27,5 +27,11 @@ describe('header popups data', () => {
         title: 'Settings',
       },
     ])
+  })
+
+  it('links the information popup to the project README', () => {
+    expect(INFORMATION_POPUP_CONTENT.linkHref).toBe(
+      'https://github.com/dreaming-of-ai/ai-explode/blob/main/README.md',
+    )
   })
 })
