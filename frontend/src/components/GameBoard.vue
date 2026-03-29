@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { Cell, GamePhase, PlayerConfig } from '@/types/game'
+import type { Cell, GamePhase, LastMoveIndicator, PlayerConfig } from '@/types/game'
 
 const props = defineProps<{
   board: Cell[][]
   players: PlayerConfig[]
   phase: GamePhase
+  lastMoveIndicator: LastMoveIndicator | null
   isCellPlayable: (row: number, col: number) => boolean
 }>()
 
@@ -23,6 +24,9 @@ function getPlayer(owner: number | null): PlayerConfig | null {
 }
 
 const boardColumnCount = computed(() => props.board[0]?.length ?? 0)
+const lastMovePlayer = computed(() =>
+  props.lastMoveIndicator ? getPlayer(props.lastMoveIndicator.playerId) : null,
+)
 
 function getCellTone(row: number, col: number): 'corner' | 'edge' | 'interior' {
   const atTopOrBottom = row === 0 || row === props.board.length - 1
@@ -37,6 +41,13 @@ function getCellTone(row: number, col: number): 'corner' | 'edge' | 'interior' {
   }
 
   return 'interior'
+}
+
+function isLastMoveCell(cell: Cell): boolean {
+  return (
+    props.lastMoveIndicator?.row === cell.row &&
+    props.lastMoveIndicator?.col === cell.col
+  )
 }
 </script>
 
@@ -64,20 +75,34 @@ function getCellTone(row: number, col: number): 'corner' | 'edge' | 'interior' {
               'is-empty': cell.owner === null,
               'is-owned': cell.owner !== null,
               'is-disabled': !isCellPlayable(cell.row, cell.col),
+              'is-last-move': isLastMoveCell(cell),
             }"
             :style="
-              getPlayer(cell.owner)
-                ? {
-                    '--cell-primary': getPlayer(cell.owner)?.color.primary,
-                    '--cell-light': getPlayer(cell.owner)?.color.light,
-                    '--cell-dark': getPlayer(cell.owner)?.color.dark,
-                  }
-                : undefined
+              {
+                ...(getPlayer(cell.owner)
+                  ? {
+                      '--cell-primary': getPlayer(cell.owner)?.color.primary,
+                      '--cell-light': getPlayer(cell.owner)?.color.light,
+                      '--cell-dark': getPlayer(cell.owner)?.color.dark,
+                    }
+                  : {}),
+                ...(isLastMoveCell(cell) && lastMovePlayer
+                  ? {
+                      '--last-move-primary': lastMovePlayer.color.primary,
+                      '--last-move-light': lastMovePlayer.color.light,
+                    }
+                  : {}),
+              }
             "
             type="button"
             :disabled="!isCellPlayable(cell.row, cell.col)"
             @click="emit('play-cell', { row: cell.row, col: cell.col })"
           >
+            <span
+              v-if="isLastMoveCell(cell)"
+              class="last-move-ring"
+              aria-hidden="true"
+            />
             <span
               v-if="cell.owner !== null"
               class="cell-initials"
@@ -130,13 +155,18 @@ function getCellTone(row: number, col: number): 'corner' | 'edge' | 'interior' {
   --cell-primary: var(--accent);
   --cell-light: rgba(109, 231, 255, 0.34);
   --cell-dark: #143247;
+  --last-move-primary: var(--accent);
+  --last-move-light: rgba(109, 231, 255, 0.34);
   aspect-ratio: 1;
+  position: relative;
+  isolation: isolate;
   display: grid;
   place-items: center;
   gap: 0.1rem;
   padding: 0.14rem;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 0.64rem;
+  overflow: hidden;
   background:
     radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.11), transparent 40%),
     rgba(13, 20, 42, 0.92);
@@ -179,15 +209,49 @@ function getCellTone(row: number, col: number): 'corner' | 'edge' | 'interior' {
   opacity: 0.72;
 }
 
+.last-move-ring {
+  position: absolute;
+  inset: 0.18rem;
+  z-index: 1;
+  border-radius: calc(0.64rem - 0.12rem);
+  border: 2px solid color-mix(in srgb, var(--last-move-primary) 82%, white);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.18),
+    0 0 18px color-mix(in srgb, var(--last-move-light) 70%, transparent);
+  pointer-events: none;
+  animation: last-move-ring-intro 260ms cubic-bezier(0.24, 1.35, 0.38, 1) both;
+}
+
 .cell-initials {
+  position: relative;
+  z-index: 2;
   font-size: clamp(0.4rem, 0.7vw, 0.56rem);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .cell-load {
+  position: relative;
+  z-index: 2;
   font-size: clamp(0.82rem, 1vw, 1.02rem);
   font-weight: 700;
+}
+
+@keyframes last-move-ring-intro {
+  0% {
+    transform: scale(0.78);
+    opacity: 0;
+  }
+
+  72% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @media (max-height: 860px) {

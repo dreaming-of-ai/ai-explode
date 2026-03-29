@@ -18,8 +18,11 @@ import { getLegalPageDocument, LEGAL_PAGE_LINKS } from '@/data/legalPages'
 const {
   setupPlayers,
   gameState,
+  displayBoard,
   activeLegalPage,
   activeHeaderPopup,
+  explosionDelayPreset,
+  explosionDelayOptions,
   setupValidation,
   canAddPlayer,
   canRemovePlayer,
@@ -31,11 +34,13 @@ const {
   isRestartWarningOpen,
   isMoveResultOpen,
   isHeaderPopupOpen,
+  lastMoveIndicator,
   moveResultPopup,
   updatePlayerName,
   updatePlayerController,
   updateComputerPlayer,
   updatePlayerColor,
+  updateExplosionDelayPreset,
   addPlayer,
   removePlayer,
   openNewGame,
@@ -101,9 +106,10 @@ const isModalOpen = computed(
           class="shell-layout"
         >
           <GameBoard
-            :board="gameState.board"
+            :board="displayBoard"
             :players="gameState.players"
             :phase="gameState.phase"
+            :last-move-indicator="lastMoveIndicator"
             :is-cell-playable="isCellPlayable"
             @play-cell="playCell($event.row, $event.col)"
           />
@@ -188,7 +194,12 @@ const isModalOpen = computed(
       :title="activeHeaderPopupDefinition.title"
       @close="closeHeaderPopup"
     >
-      <HeaderPopupContent :popup-id="activeHeaderPopup" />
+      <HeaderPopupContent
+        :popup-id="activeHeaderPopup"
+        :selected-explosion-delay-preset="explosionDelayPreset"
+        :explosion-delay-options="explosionDelayOptions"
+        @update-explosion-delay-preset="updateExplosionDelayPreset"
+      />
     </ShellModal>
   </div>
 </template>

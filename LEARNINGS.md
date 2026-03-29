@@ -40,3 +40,7 @@
 ## 2026-03-28 Header Popup Shell State
 
 - Secondary shell popups fit best as another case in the shared `modalState` flow instead of local component state. Reusing the same modal gate in `frontend/src/composables/useGameShell.ts` automatically pauses queued computer turns, keeps the board inert, and prevents popup behavior from drifting away from setup, restart-warning, and move-result dialogs.
+
+## 2026-03-29 Delayed Explosion Playback
+
+- Presentation-paced move playback works best with a separate displayed board in `frontend/src/composables/useGameShell.ts`. Keeping `gameState` authoritative until the move fully resolves lets the board animate intermediate explosion steps without advancing the turn, drifting the scoreboard, or firing result popups against an unstable board.

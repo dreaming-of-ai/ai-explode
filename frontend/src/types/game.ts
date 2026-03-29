@@ -23,6 +23,8 @@ export type PlayerController = 'human' | 'computer'
 
 export type ComputerPlayerId = 'random'
 
+export type ExplosionDelayPreset = 'none' | 'low' | 'medium' | 'high'
+
 export interface ComputerPlayerDefinition {
   id: ComputerPlayerId
   name: string
@@ -51,6 +53,12 @@ export interface Cell {
   col: number
   owner: number | null
   load: number
+}
+
+export interface LastMoveIndicator {
+  row: number
+  col: number
+  playerId: number
 }
 
 export interface GameState {
@@ -90,4 +98,10 @@ export interface MoveResultPopup {
   description: string
   messages: string[]
   winnerPlayerId: number | null
+}
+
+export interface ExplosionDelayOption {
+  id: ExplosionDelayPreset
+  label: string
+  delayMs: number
 }

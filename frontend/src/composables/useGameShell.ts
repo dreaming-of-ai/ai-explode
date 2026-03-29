@@ -5,12 +5,19 @@ import {
   getComputerPlayerDefinition,
   getComputerPlayerDisplayName,
 } from '@/data/computerPlayers'
+import {
+  DEFAULT_EXPLOSION_DELAY_PRESET,
+  EXPLOSION_DELAY_OPTIONS,
+  getExplosionDelayMs,
+} from '@/data/explosionDelayPresets'
 import { PLAYER_COLORS } from '@/data/playerColors'
 import type {
   Cell,
   ComputerPlayerId,
+  ExplosionDelayPreset,
   GameState,
   HeaderPopupId,
+  LastMoveIndicator,
   LegalPageId,
   ModalState,
   MoveResultPopup,
@@ -50,9 +57,25 @@ export interface BoardResolutionResult {
   sweepCount: number
 }
 
+export interface BoardResolutionPlaybackUpdate {
+  row: number
+  col: number
+  cell: Cell
+}
+
+export interface BoardResolutionPlaybackResult extends BoardResolutionResult {
+  initialBoard: Cell[][]
+  explosionUpdates: BoardResolutionPlaybackUpdate[]
+}
+
 export interface BoardPosition {
   row: number
   col: number
+}
+
+export interface PlayedMovePlaybackResult extends PlayedMoveResult {
+  initialBoard: Cell[][]
+  explosionUpdates: BoardResolutionPlaybackUpdate[]
 }
 
 export function normalizePlayerName(name: string): string {
@@ -305,7 +328,21 @@ function applyPlayedLoad(board: Cell[][], row: number, col: number, activePlayer
   cell.load += 1
 }
 
-function resolveSingleExplosion(board: Cell[][], row: number, col: number, activePlayerId: number): boolean {
+function createPlaybackUpdate(cell: Cell): BoardResolutionPlaybackUpdate {
+  return {
+    row: cell.row,
+    col: cell.col,
+    cell: { ...cell },
+  }
+}
+
+function resolveSingleExplosion(
+  board: Cell[][],
+  row: number,
+  col: number,
+  activePlayerId: number,
+  explosionUpdates: BoardResolutionPlaybackUpdate[] = [],
+): boolean {
   const origin = board[row]?.[col]
 
   if (!origin) {
@@ -320,24 +357,27 @@ function resolveSingleExplosion(board: Cell[][], row: number, col: number, activ
 
   adjacentCells.forEach((neighbor) => {
     neighbor.load += 1
+    neighbor.owner = activePlayerId
+    explosionUpdates.push(createPlaybackUpdate(neighbor))
   })
 
   origin.load -= adjacentCells.length
-
-  adjacentCells.forEach((neighbor) => {
-    neighbor.owner = activePlayerId
-  })
+  explosionUpdates.push(createPlaybackUpdate(origin))
 
   return true
 }
 
-function resolveSweep(board: Cell[][], activePlayerId: number): boolean {
+function resolveSweep(
+  board: Cell[][],
+  activePlayerId: number,
+  explosionUpdates: BoardResolutionPlaybackUpdate[] = [],
+): boolean {
   let hadExplosion = false
 
   // A sweep traverses the live board once in row-major order.
   board.forEach((boardRow, currentRow) => {
     boardRow.forEach((_, currentCol) => {
-      if (resolveSingleExplosion(board, currentRow, currentCol, activePlayerId)) {
+      if (resolveSingleExplosion(board, currentRow, currentCol, activePlayerId, explosionUpdates)) {
         hadExplosion = true
       }
     })
@@ -369,22 +409,26 @@ function hasSingleOccupiedOwner(board: Cell[][]): boolean {
   return occupiedOwnerId !== null
 }
 
-export function resolveBoardAfterMove(
+export function resolveBoardAfterMoveWithPlayback(
   state: GameState,
   row: number,
   col: number,
-): BoardResolutionResult {
+): BoardResolutionPlaybackResult {
   const board = cloneBoard(state.board)
   const activePlayer = getActivePlayer(state)
 
   if (!activePlayer) {
     return {
+      initialBoard: board,
       board,
       sweepCount: 0,
+      explosionUpdates: [],
     }
   }
 
   applyPlayedLoad(board, row, col, activePlayer.id)
+  const initialBoard = cloneBoard(board)
+  const explosionUpdates: BoardResolutionPlaybackUpdate[] = []
 
   let sweepCount = 0
   let hadExplosion = false
@@ -392,7 +436,7 @@ export function resolveBoardAfterMove(
 
   do {
     sweepCount += 1
-    hadExplosion = resolveSweep(board, activePlayer.id)
+    hadExplosion = resolveSweep(board, activePlayer.id, explosionUpdates)
 
     // Once one player owns every occupied field, later sweeps can only cycle
     // loads without changing the winner, so we can hand off to outcome logic.
@@ -400,6 +444,21 @@ export function resolveBoardAfterMove(
       break
     }
   } while (hadExplosion)
+
+  return {
+    initialBoard,
+    board,
+    sweepCount,
+    explosionUpdates,
+  }
+}
+
+export function resolveBoardAfterMove(
+  state: GameState,
+  row: number,
+  col: number,
+): BoardResolutionResult {
+  const { board, sweepCount } = resolveBoardAfterMoveWithPlayback(state, row, col)
 
   return {
     board,
@@ -524,20 +583,40 @@ function finalizeResolvedMove(state: GameState): PlayedMoveResult {
   }
 }
 
-export function playMoveWithOutcome(state: GameState, row: number, col: number): PlayedMoveResult {
+export function playMoveWithOutcomeAndPlayback(
+  state: GameState,
+  row: number,
+  col: number,
+): PlayedMovePlaybackResult {
   if (!isCellPlayable(state, row, col)) {
     return {
       state,
       resultPopup: null,
+      initialBoard: cloneBoard(state.board),
+      explosionUpdates: [],
     }
   }
 
-  const { board } = resolveBoardAfterMove(state, row, col)
-
-  return finalizeResolvedMove({
+  const { initialBoard, board, explosionUpdates } = resolveBoardAfterMoveWithPlayback(state, row, col)
+  const moveResult = finalizeResolvedMove({
     ...state,
     board,
   })
+
+  return {
+    ...moveResult,
+    initialBoard,
+    explosionUpdates,
+  }
+}
+
+export function playMoveWithOutcome(state: GameState, row: number, col: number): PlayedMoveResult {
+  const { state: nextState, resultPopup } = playMoveWithOutcomeAndPlayback(state, row, col)
+
+  return {
+    state: nextState,
+    resultPopup,
+  }
 }
 
 export function playMove(state: GameState, row: number, col: number): GameState {
@@ -640,13 +719,35 @@ export function createRestartSummary(state: GameState): RestartSummary | null {
   }
 }
 
+function applyPlaybackUpdate(board: Cell[][], update: BoardResolutionPlaybackUpdate): Cell[][] {
+  const nextBoard = cloneBoard(board)
+
+  if (nextBoard[update.row]?.[update.col]) {
+    nextBoard[update.row][update.col] = {
+      ...update.cell,
+    }
+  }
+
+  return nextBoard
+}
+
+function waitForDuration(durationMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, durationMs)
+  })
+}
+
 export function useGameShell() {
   const setupPlayers = ref<SetupPlayer[]>(createInitialSetupPlayers())
   const gameState = ref<GameState>(createIdleGameState())
+  const displayBoard = ref<Cell[][]>(cloneBoard(gameState.value.board))
   const activeLegalPage = ref<LegalPageId | null>(null)
   const modalState = ref<ModalState>('closed')
   const activeHeaderPopup = ref<HeaderPopupId | null>(null)
   const moveResultPopup = ref<MoveResultPopup | null>(null)
+  const lastMoveIndicator = ref<LastMoveIndicator | null>(null)
+  const explosionDelayPreset = ref<ExplosionDelayPreset>(DEFAULT_EXPLOSION_DELAY_PRESET)
+  const isResolvingMove = ref(false)
 
   const setupValidation = computed(() => validateSetupPlayers(setupPlayers.value))
   const canAddPlayer = computed(() => setupPlayers.value.length < MAX_PLAYERS)
@@ -675,6 +776,14 @@ export function useGameShell() {
   const isHeaderPopupOpen = computed(
     () => modalState.value === 'header-popup' && activeHeaderPopup.value !== null,
   )
+
+  watchEffect(() => {
+    if (isResolvingMove.value) {
+      return
+    }
+
+    displayBoard.value = cloneBoard(gameState.value.board)
+  })
 
   function updatePlayerName(playerId: number, name: string) {
     setupPlayers.value = setupPlayers.value.map((player) =>
@@ -716,8 +825,12 @@ export function useGameShell() {
     setupPlayers.value = removeSetupPlayer(setupPlayers.value, playerId)
   }
 
+  function updateExplosionDelayPreset(preset: ExplosionDelayPreset) {
+    explosionDelayPreset.value = preset
+  }
+
   function openNewGame() {
-    if (modalState.value !== 'closed') {
+    if (modalState.value !== 'closed' || isResolvingMove.value) {
       return
     }
 
@@ -741,7 +854,7 @@ export function useGameShell() {
   }
 
   function openLegalPage(pageId: LegalPageId) {
-    if (modalState.value !== 'closed') {
+    if (modalState.value !== 'closed' || isResolvingMove.value) {
       return
     }
 
@@ -753,7 +866,7 @@ export function useGameShell() {
   }
 
   function openHeaderPopup(popupId: HeaderPopupId) {
-    if (modalState.value !== 'closed' || activeLegalPage.value !== null) {
+    if (modalState.value !== 'closed' || activeLegalPage.value !== null || isResolvingMove.value) {
       return
     }
 
@@ -781,35 +894,83 @@ export function useGameShell() {
     }
 
     gameState.value = startGameSession(setupPlayers.value)
+    displayBoard.value = cloneBoard(gameState.value.board)
     activeHeaderPopup.value = null
     moveResultPopup.value = null
+    lastMoveIndicator.value = null
+    isResolvingMove.value = false
     modalState.value = 'closed'
   }
 
-  function applyMove(row: number, col: number) {
+  function finalizeShellMove(moveResult: PlayedMoveResult) {
+    gameState.value = moveResult.state
+    displayBoard.value = cloneBoard(moveResult.state.board)
+    moveResultPopup.value = moveResult.resultPopup
+
+    if (moveResult.resultPopup) {
+      modalState.value = 'move-result'
+      return
+    }
+
+    modalState.value = 'closed'
+  }
+
+  async function applyMove(row: number, col: number) {
     if (
       gameState.value.phase !== 'playing' ||
+      isResolvingMove.value ||
       modalState.value !== 'closed' ||
       activeLegalPage.value !== null
     ) {
       return
     }
 
-    const moveResult = playMoveWithOutcome(gameState.value, row, col)
-    gameState.value = moveResult.state
-
-    if (moveResult.resultPopup) {
-      moveResultPopup.value = moveResult.resultPopup
-      modalState.value = 'move-result'
+    if (!isCellPlayable(gameState.value, row, col)) {
       return
     }
 
-    moveResultPopup.value = null
+    const activePlayer = getActivePlayer(gameState.value)
+
+    if (!activePlayer) {
+      return
+    }
+
+    const moveResult = playMoveWithOutcomeAndPlayback(gameState.value, row, col)
+    const effectiveDelayMs = getExplosionDelayMs(explosionDelayPreset.value)
+
+    lastMoveIndicator.value = {
+      row,
+      col,
+      playerId: activePlayer.id,
+    }
+
+    if (moveResult.explosionUpdates.length === 0 || effectiveDelayMs === 0) {
+      finalizeShellMove(moveResult)
+      return
+    }
+
+    isResolvingMove.value = true
+    displayBoard.value = cloneBoard(moveResult.initialBoard)
+
+    try {
+      for (const [index, update] of moveResult.explosionUpdates.entries()) {
+        displayBoard.value = applyPlaybackUpdate(displayBoard.value, update)
+
+        if (index < moveResult.explosionUpdates.length - 1) {
+          await waitForDuration(effectiveDelayMs)
+        }
+      }
+
+      finalizeShellMove(moveResult)
+    } finally {
+      isResolvingMove.value = false
+    }
   }
 
   function playComputerTurn() {
     if (
       gameState.value.phase !== 'playing' ||
+      isResolvingMove.value ||
       modalState.value !== 'closed' ||
       activeLegalPage.value !== null ||
       !isComputerTurn(gameState.value)
@@ -823,7 +984,7 @@ export function useGameShell() {
       return
     }
 
-    applyMove(move.row, move.col)
+    void applyMove(move.row, move.col)
   }
 
   function playCell(row: number, col: number) {
@@ -831,11 +992,16 @@ export function useGameShell() {
       return
     }
 
-    applyMove(row, col)
+    void applyMove(row, col)
   }
 
   watchEffect((onCleanup) => {
-    if (activeLegalPage.value !== null || modalState.value !== 'closed' || !isComputerTurn(gameState.value)) {
+    if (
+      activeLegalPage.value !== null ||
+      modalState.value !== 'closed' ||
+      isResolvingMove.value ||
+      !isComputerTurn(gameState.value)
+    ) {
       return
     }
 
@@ -857,10 +1023,15 @@ export function useGameShell() {
   return {
     setupPlayers,
     gameState,
+    displayBoard,
     activeLegalPage,
     modalState,
     activeHeaderPopup,
     moveResultPopup,
+    lastMoveIndicator,
+    explosionDelayPreset,
+    explosionDelayOptions: EXPLOSION_DELAY_OPTIONS,
+    isResolvingMove,
     setupValidation,
     canAddPlayer,
     canRemovePlayer,
@@ -878,6 +1049,7 @@ export function useGameShell() {
     updatePlayerController,
     updateComputerPlayer,
     updatePlayerColor,
+    updateExplosionDelayPreset,
     addPlayer,
     removePlayer,
     openNewGame,
@@ -895,6 +1067,7 @@ export function useGameShell() {
     isCellPlayable: (row: number, col: number) =>
       activeLegalPage.value === null &&
       modalState.value === 'closed' &&
+      !isResolvingMove.value &&
       !isComputerTurn(gameState.value) &&
       isCellPlayable(gameState.value, row, col),
   }

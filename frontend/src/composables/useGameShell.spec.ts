@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { EXPLOSION_DELAY_MEDIUM_MS, EXPLOSION_DELAY_HIGH_MS } from '@/data/explosionDelayPresets'
 import {
   BOARD_SIZE,
   COMPUTER_TURN_DELAY_MS,
@@ -13,8 +14,10 @@ import {
   getAvailableColors,
   normalizeSetupPlayers,
   playMove,
+  playMoveWithOutcomeAndPlayback,
   playMoveWithOutcome,
   removeSetupPlayer,
+  resolveBoardAfterMoveWithPlayback,
   selectRandomComputerMove,
   startGameSession,
   useGameShell,
@@ -355,6 +358,30 @@ describe('play flow', () => {
     expect(resolution.board[2][1]).toMatchObject({ owner: 1, load: 2 })
     expect(resolution.board[2][2]).toMatchObject({ owner: 1, load: 1 })
     expectStableBoard(resolution.board)
+  })
+
+  it('captures ordered explosion playback updates separately from the final resolved board', () => {
+    const board = createEmptyBoard()
+    setBoardCell(board, 0, 0, { owner: 1, load: 3 })
+
+    const resolution = resolveBoardAfterMoveWithPlayback(createPlayingState(board), 0, 0)
+    const playedMove = playMoveWithOutcomeAndPlayback(createPlayingState(board), 0, 0)
+
+    expect(resolution.initialBoard[0][0]).toMatchObject({ owner: 1, load: 4 })
+    expect(resolution.explosionUpdates.map((update) => [update.row, update.col])).toEqual([
+      [0, 1],
+      [1, 1],
+      [1, 0],
+      [0, 0],
+    ])
+    expect(resolution.explosionUpdates[0]?.cell).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.explosionUpdates[3]?.cell).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[0][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[0][1]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[1][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(resolution.board[1][1]).toMatchObject({ owner: 1, load: 1 })
+    expect(playedMove.initialBoard).toEqual(resolution.initialBoard)
+    expect(playedMove.state.board).toEqual(resolution.board)
   })
 
   it("ignores clicks on an opponent's occupied cell", () => {
@@ -699,6 +726,39 @@ describe('shell flow', () => {
     expect(shell.isCellPlayable(0, 1)).toBe(true)
   })
 
+  it('tracks the last deliberate move, ignores invalid clicks, and clears the indicator on a fresh match', () => {
+    const shell = useGameShell()
+
+    shell.updatePlayerName(1, 'Nova')
+    shell.updatePlayerName(2, 'Atlas')
+    shell.startGame()
+
+    expect(shell.lastMoveIndicator.value).toBeNull()
+
+    shell.playCell(0, 0)
+
+    expect(shell.lastMoveIndicator.value).toEqual({
+      row: 0,
+      col: 0,
+      playerId: 1,
+    })
+
+    shell.playCell(0, 0)
+
+    expect(shell.lastMoveIndicator.value).toEqual({
+      row: 0,
+      col: 0,
+      playerId: 1,
+    })
+
+    shell.openNewGame()
+    shell.proceedToSetupFromWarning()
+    shell.startGame()
+
+    expect(shell.lastMoveIndicator.value).toBeNull()
+    expect(shell.displayBoard.value.flat().every((cell) => cell.owner === null && cell.load === 0)).toBe(true)
+  })
+
   it('blocks board moves and legal navigation while a header popup is open', () => {
     const shell = useGameShell()
 
@@ -717,6 +777,94 @@ describe('shell flow', () => {
     expect(shell.activeHeaderPopup.value).toBe('information')
     expect(shell.activeLegalPage.value).toBeNull()
     expect(shell.gameState.value).toEqual(snapshot)
+  })
+
+  it('plays delayed explosion updates on the display board while keeping match state stable until resolution completes', async () => {
+    vi.useFakeTimers()
+
+    const shell = useGameShell()
+    const board = createEmptyBoard()
+
+    setBoardCell(board, 0, 0, { owner: 1, load: 3 })
+
+    shell.updateExplosionDelayPreset('medium')
+    shell.gameState.value = {
+      ...startGameSession(createNamedPlayers()),
+      board,
+      activePlayerIndex: 0,
+      round: 1,
+    }
+    await Promise.resolve()
+
+    shell.playCell(0, 0)
+
+    expect(shell.isResolvingMove.value).toBe(true)
+    expect(shell.lastMoveIndicator.value).toEqual({
+      row: 0,
+      col: 0,
+      playerId: 1,
+    })
+    expect(shell.displayBoard.value[0][0]).toMatchObject({ owner: 1, load: 4 })
+    expect(shell.displayBoard.value[0][1]).toMatchObject({ owner: 1, load: 1 })
+    expect(shell.gameState.value.board[0][0]).toMatchObject({ owner: 1, load: 3 })
+    expect(shell.activePlayer.value?.id).toBe(1)
+    expect(shell.scoreboardEntries.value[0]?.fields).toBe(1)
+
+    shell.openHeaderPopup('settings')
+
+    expect(shell.modalState.value).toBe('closed')
+    expect(shell.activeHeaderPopup.value).toBeNull()
+
+    await vi.advanceTimersByTimeAsync(EXPLOSION_DELAY_MEDIUM_MS)
+    expect(shell.displayBoard.value[1][1]).toMatchObject({ owner: 1, load: 1 })
+    expect(shell.gameState.value.activePlayerIndex).toBe(0)
+
+    await vi.advanceTimersByTimeAsync(EXPLOSION_DELAY_MEDIUM_MS)
+    expect(shell.displayBoard.value[1][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(shell.gameState.value.round).toBe(1)
+
+    await vi.advanceTimersByTimeAsync(EXPLOSION_DELAY_MEDIUM_MS)
+
+    expect(shell.isResolvingMove.value).toBe(false)
+    expect(shell.displayBoard.value[0][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(shell.gameState.value.board[0][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(shell.gameState.value.activePlayerIndex).toBe(1)
+    expect(shell.scoreboardEntries.value[0]?.fields).toBe(4)
+  })
+
+  it('captures the selected explosion delay for the full in-flight move even if the setting changes mid-resolution', async () => {
+    vi.useFakeTimers()
+
+    const shell = useGameShell()
+    const board = createEmptyBoard()
+
+    setBoardCell(board, 0, 0, { owner: 1, load: 3 })
+
+    shell.updateExplosionDelayPreset('high')
+    shell.gameState.value = {
+      ...startGameSession(createNamedPlayers()),
+      board,
+      activePlayerIndex: 0,
+      round: 1,
+    }
+    await Promise.resolve()
+
+    shell.playCell(0, 0)
+    shell.updateExplosionDelayPreset('none')
+
+    await vi.advanceTimersByTimeAsync(EXPLOSION_DELAY_MEDIUM_MS)
+    expect(shell.displayBoard.value[1][1]).toMatchObject({ owner: null, load: 0 })
+    expect(shell.isResolvingMove.value).toBe(true)
+
+    await vi.advanceTimersByTimeAsync(EXPLOSION_DELAY_HIGH_MS - EXPLOSION_DELAY_MEDIUM_MS)
+    expect(shell.displayBoard.value[1][1]).toMatchObject({ owner: 1, load: 1 })
+
+    await vi.runAllTimersAsync()
+
+    expect(shell.explosionDelayPreset.value).toBe('none')
+    expect(shell.isResolvingMove.value).toBe(false)
+    expect(shell.gameState.value.activePlayerIndex).toBe(1)
+    expect(shell.displayBoard.value[0][0]).toMatchObject({ owner: 1, load: 1 })
   })
 
   it('automatically plays the first move for an opening random computer player', async () => {
@@ -740,6 +888,40 @@ describe('shell flow', () => {
     expect(occupiedCells).toHaveLength(1)
     expect(occupiedCells[0]).toMatchObject({ owner: 1, load: 1 })
     expect(shell.gameState.value.activePlayerIndex).toBe(1)
+  })
+
+  it('waits for delayed playback to finish before scheduling the next computer turn', async () => {
+    vi.useFakeTimers()
+
+    const shell = useGameShell()
+    const board = createEmptyBoard()
+
+    setBoardCell(board, 0, 0, { owner: 1, load: 3 })
+
+    shell.updateExplosionDelayPreset('medium')
+    shell.gameState.value = {
+      ...startGameSession([
+        createHumanPlayer(1, 'Nova', 'red'),
+        createRandomPlayer(2, 'blue'),
+      ]),
+      board,
+      activePlayerIndex: 0,
+      round: 1,
+    }
+    await Promise.resolve()
+
+    shell.playCell(0, 0)
+
+    await vi.advanceTimersByTimeAsync(EXPLOSION_DELAY_MEDIUM_MS * 3)
+
+    expect(shell.isResolvingMove.value).toBe(false)
+    expect(shell.gameState.value.activePlayerIndex).toBe(1)
+    expect(shell.gameState.value.board.flat().filter((cell) => cell.owner === 2)).toHaveLength(0)
+
+    await vi.advanceTimersByTimeAsync(COMPUTER_TURN_DELAY_MS)
+
+    expect(shell.gameState.value.board.flat().filter((cell) => cell.owner === 2)).toHaveLength(1)
+    expect(shell.gameState.value.activePlayerIndex).toBe(0)
   })
 
   it('automatically hands off from a human move to the next random computer move', async () => {

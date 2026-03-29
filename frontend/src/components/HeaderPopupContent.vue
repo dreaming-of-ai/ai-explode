@@ -2,14 +2,21 @@
 import { computed } from 'vue'
 
 import { GAMING_RULES_SECTIONS, INFORMATION_POPUP_CONTENT } from '@/data/headerPopups'
-import type { HeaderPopupId } from '@/types/game'
+import type { ExplosionDelayOption, ExplosionDelayPreset, HeaderPopupId } from '@/types/game'
 
 const props = defineProps<{
   popupId: HeaderPopupId
+  selectedExplosionDelayPreset: ExplosionDelayPreset
+  explosionDelayOptions: ReadonlyArray<ExplosionDelayOption>
+}>()
+
+const emit = defineEmits<{
+  (event: 'update-explosion-delay-preset', preset: ExplosionDelayPreset): void
 }>()
 
 const isRulesPopup = computed(() => props.popupId === 'gaming-rules')
 const isInformationPopup = computed(() => props.popupId === 'information')
+const isSettingsPopup = computed(() => props.popupId === 'settings')
 </script>
 
 <template>
@@ -52,6 +59,41 @@ const isInformationPopup = computed(() => props.popupId === 'information')
     </a>
   </section>
 
+  <section
+    v-else-if="isSettingsPopup"
+    class="settings-content"
+  >
+    <section class="settings-card">
+      <div class="settings-copy">
+        <p class="settings-label">Explosion Delay</p>
+        <h3>Follow each chain reaction</h3>
+        <p>
+          Choose how much time to leave between consecutive explosion-driven cell updates.
+        </p>
+      </div>
+
+      <div
+        class="settings-grid"
+        role="radiogroup"
+        aria-label="Explosion Delay"
+      >
+        <button
+          v-for="option in explosionDelayOptions"
+          :key="option.id"
+          class="settings-option"
+          :class="{ 'is-selected': selectedExplosionDelayPreset === option.id }"
+          type="button"
+          role="radio"
+          :aria-checked="selectedExplosionDelayPreset === option.id"
+          @click="emit('update-explosion-delay-preset', option.id)"
+        >
+          <span>{{ option.label }}</span>
+          <small>{{ option.delayMs }} ms</small>
+        </button>
+      </div>
+    </section>
+  </section>
+
   <div
     v-else
     class="placeholder-spacer"
@@ -78,6 +120,73 @@ const isInformationPopup = computed(() => props.popupId === 'information')
   background: rgba(7, 12, 28, 0.78);
   color: var(--text-soft);
   line-height: 1.6;
+}
+
+.settings-content {
+  display: grid;
+  min-height: 0;
+}
+
+.settings-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  background: rgba(7, 12, 28, 0.78);
+}
+
+.settings-copy {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+.settings-label {
+  color: var(--accent);
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+  gap: 0.75rem;
+}
+
+.settings-option {
+  display: grid;
+  gap: 0.28rem;
+  justify-items: start;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  background: rgba(10, 16, 35, 0.88);
+  color: var(--text-main);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.settings-option:hover,
+.settings-option:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(109, 231, 255, 0.34);
+}
+
+.settings-option.is-selected {
+  border-color: rgba(109, 231, 255, 0.58);
+  background: linear-gradient(135deg, rgba(31, 54, 94, 0.92), rgba(9, 16, 36, 0.96));
+}
+
+.settings-option small {
+  color: var(--text-soft);
+  font-size: 0.82rem;
 }
 
 .rules-section {
