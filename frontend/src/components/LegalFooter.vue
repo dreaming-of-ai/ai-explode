@@ -45,13 +45,14 @@ const emit = defineEmits<{
 .legal-footer {
   display: flex;
   justify-content: center;
-  padding: 0.2rem 0 0.15rem;
+  padding: 0.15rem 0 max(0.15rem, var(--safe-bottom));
 }
 
 .legal-footer__nav {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.42);
@@ -63,7 +64,7 @@ const emit = defineEmits<{
 
 .legal-footer__link {
   border: 0;
-  padding: 0;
+  padding: 0.18rem 0.1rem;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -73,5 +74,16 @@ const emit = defineEmits<{
 
 .legal-footer__link:hover {
   color: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 720px), (max-height: 520px) {
+  .legal-footer {
+    padding-top: 0;
+  }
+
+  .legal-footer__nav {
+    gap: 0.28rem 0.45rem;
+    font-size: 0.72rem;
+  }
 }
 </style>

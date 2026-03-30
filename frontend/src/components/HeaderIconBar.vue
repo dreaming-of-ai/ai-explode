@@ -155,4 +155,20 @@ svg {
     block-size: 1.15rem;
   }
 }
+
+@media (max-height: 520px) {
+  .header-icon-bar {
+    gap: 0.35rem;
+  }
+
+  .header-icon-button {
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+  }
+
+  svg {
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+  }
+}
 </style>

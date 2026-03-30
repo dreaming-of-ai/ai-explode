@@ -207,17 +207,18 @@ const isModalOpen = computed(
 <style scoped>
 .app-frame {
   height: 100%;
+  min-height: 0;
   display: grid;
 }
 
 .app-shell {
   min-height: 0;
   display: grid;
-  gap: clamp(0.75rem, 1.5vh, 1.1rem);
+  gap: clamp(0.65rem, 1.4vh, 1rem);
 }
 
 .app-shell--board {
-  --board-size-limit: min(calc(100dvh - 16rem), calc(100vw - 19rem));
+  --board-size-limit: 46rem;
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
@@ -230,11 +231,13 @@ const isModalOpen = computed(
   align-items: start;
   justify-content: space-between;
   gap: 1rem 1.25rem;
+  min-width: 0;
 }
 
 .shell-main {
   min-height: 0;
   display: grid;
+  overflow: hidden;
 }
 
 .brand-block {
@@ -273,15 +276,13 @@ h1 {
   grid-template-columns: minmax(0, 1fr) minmax(15rem, 17.5rem);
   gap: 0.85rem;
   align-items: stretch;
+  overflow: hidden;
 }
 
 @media (max-width: 1080px) {
-  .app-shell--board {
-    --board-size-limit: min(calc(100dvh - 19.5rem), calc(100vw - 2rem));
-  }
-
   .shell-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
   }
 }
 
@@ -296,21 +297,68 @@ h1 {
 }
 
 @media (max-width: 720px) {
+  .app-shell {
+    gap: 0.55rem;
+  }
+
+  .app-header {
+    gap: 0.7rem 0.9rem;
+  }
+
+  h1 {
+    font-size: clamp(1.85rem, 9vw, 2.6rem);
+  }
+
   .brand-subtitle {
     white-space: normal;
+    font-size: 0.84rem;
+  }
+
+  .shell-layout {
+    gap: 0.65rem;
   }
 }
 
 @media (max-height: 860px) {
   .app-shell--board {
-    --board-size-limit: min(calc(100dvh - 14rem), calc(100vw - 20rem));
+    --board-size-limit: 42rem;
     gap: 0.7rem;
   }
 }
 
 @media (max-height: 860px) and (max-width: 1080px) {
   .app-shell--board {
-    --board-size-limit: min(calc(100dvh - 17.5rem), calc(100vw - 2rem));
+    --board-size-limit: 40rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .app-shell {
+    gap: 0.4rem;
+  }
+
+  .app-header {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem 0.85rem;
+  }
+
+  .header-actions {
+    width: auto;
+  }
+
+  h1 {
+    font-size: clamp(1.6rem, 4.6vw, 2.15rem);
+  }
+
+  .brand-subtitle {
+    display: none;
+  }
+
+  .shell-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(10.75rem, 12rem);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0.55rem;
   }
 }
 </style>

@@ -21,6 +21,10 @@
   --accent: #6de7ff;
   --panel-bg: rgba(8, 13, 29, 0.84);
   --panel-border: rgba(255, 255, 255, 0.08);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
 }
 
 * {
@@ -66,7 +70,11 @@ input:focus-visible {
   width: min(1380px, calc(100vw - 1.5rem));
   margin: 0 auto;
   height: 100dvh;
-  padding: clamp(0.85rem, 2vh, 1.5rem) 0;
+  padding:
+    max(clamp(0.85rem, 2vh, 1.5rem), calc(var(--safe-top) + 0.45rem))
+    max(0.75rem, calc(var(--safe-right) + 0.65rem))
+    max(clamp(0.85rem, 2vh, 1.5rem), calc(var(--safe-bottom) + 0.45rem))
+    max(0.75rem, calc(var(--safe-left) + 0.65rem));
 }
 
 .panel {
@@ -84,10 +92,17 @@ input:focus-visible {
 
 @media (max-width: 720px) {
   #app {
-    width: min(100vw - 1rem, 1380px);
+    width: 100%;
   }
 
   .panel {
     border-radius: 1.15rem;
+  }
+}
+
+@media (max-width: 720px), (max-height: 520px) {
+  .panel {
+    padding: clamp(0.75rem, 1.8vw, 1rem);
+    border-radius: 1rem;
   }
 }

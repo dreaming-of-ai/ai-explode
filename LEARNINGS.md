@@ -48,3 +48,10 @@
 ## 2026-03-29 Frontend Toolchain Baseline
 
 - The frontend now targets the Vite 8 and Vitest 4 toolchain. Work on `frontend` should assume Node `^20.19.0 || >=22.12.0`, and the current `frontend/vite.config.ts` survives that upgrade without extra compatibility overrides.
+
+## 2026-03-30 Mobile Shell Support
+
+- A no-scroll board-first shell that works on desktop can still hide primary actions on phones once the sidebar stacks below the board. Mobile layouts need an explicit compact action strategy instead of relying on the desktop sidebar order.
+- Landscape phone issues are driven more by short viewport height than by width alone. Board sizing needs a mobile legibility floor and chrome compaction rules, not just narrower breakpoints.
+- The square board is easier to keep inside a responsive shell when its size is derived from the actual board container, not from guessed viewport subtractions. `container-type: size` plus container query units in `frontend/src/components/GameBoard.vue` keeps the board legible across rotation without adding JavaScript viewport bookkeeping.
+- Mobile secondary information should stay in a collapsible region that can scroll independently of the board shell. Keeping the `New Game` action and turn context outside that collapsed region in `frontend/src/components/PlayerSidebar.vue` prevents the scoreboard or overview copy from stealing the board's minimum space budget.

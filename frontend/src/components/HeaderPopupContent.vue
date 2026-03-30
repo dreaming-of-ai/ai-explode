@@ -242,4 +242,25 @@ ul {
     padding: 0.9rem;
   }
 }
+
+@media (max-width: 720px), (max-height: 520px) {
+  .rules-content,
+  .settings-card {
+    gap: 0.75rem;
+  }
+
+  .info-content,
+  .rules-section,
+  .settings-card {
+    padding: 0.82rem;
+  }
+
+  .settings-grid {
+    gap: 0.6rem;
+  }
+
+  .settings-option {
+    padding: 0.82rem 0.9rem;
+  }
+}
 </style>

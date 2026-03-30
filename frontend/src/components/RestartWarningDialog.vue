@@ -227,4 +227,28 @@ strong {
     align-items: stretch;
   }
 }
+
+@media (max-width: 720px), (max-height: 520px) {
+  .warning-dialog {
+    gap: 0.8rem;
+  }
+
+  .summary-card {
+    gap: 0.8rem;
+    padding: 0.85rem;
+  }
+
+  .summary-list {
+    gap: 0.6rem;
+  }
+
+  .summary-item {
+    padding: 0.68rem 0.78rem;
+  }
+
+  .primary-button,
+  .secondary-button {
+    padding: 0.82rem 1.05rem;
+  }
+}
 </style>

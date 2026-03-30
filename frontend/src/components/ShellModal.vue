@@ -194,14 +194,18 @@ onUnmounted(() => {
   z-index: 20;
   display: grid;
   place-items: center;
-  padding: 1rem;
+  padding:
+    max(1rem, calc(var(--safe-top) + 0.4rem))
+    max(1rem, calc(var(--safe-right) + 0.5rem))
+    max(1rem, calc(var(--safe-bottom) + 0.5rem))
+    max(1rem, calc(var(--safe-left) + 0.5rem));
   background: rgba(4, 7, 16, 0.72);
   backdrop-filter: blur(16px);
 }
 
 .modal-panel {
   width: min(100%, 52rem);
-  max-height: min(92dvh, 56rem);
+  max-height: min(100%, 56rem);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 1rem;
@@ -256,7 +260,8 @@ h2 {
 .modal-content {
   min-height: 0;
   display: grid;
-  overflow: hidden;
+  overflow: auto;
+  padding-right: 0.2rem;
 }
 
 .modal-content :deep(.setup-card) {
@@ -271,6 +276,46 @@ h2 {
 @media (max-width: 720px) {
   .modal-overlay {
     padding: 0.65rem;
+  }
+
+  .modal-panel {
+    gap: 0.85rem;
+  }
+
+  .close-button {
+    width: 2.3rem;
+    height: 2.3rem;
+  }
+}
+
+@media (max-width: 720px), (max-height: 520px) {
+  .modal-overlay {
+    padding:
+      max(0.65rem, calc(var(--safe-top) + 0.35rem))
+      max(0.65rem, calc(var(--safe-right) + 0.4rem))
+      max(0.65rem, calc(var(--safe-bottom) + 0.4rem))
+      max(0.65rem, calc(var(--safe-left) + 0.4rem));
+  }
+
+  .modal-panel {
+    gap: 0.75rem;
+  }
+
+  .modal-copy {
+    gap: 0.35rem;
+  }
+
+  h2 {
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+  }
+
+  .modal-description {
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+
+  .modal-content {
+    padding-right: 0.12rem;
   }
 }
 </style>

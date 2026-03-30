@@ -122,19 +122,36 @@ function isLastMoveCell(cell: Cell): boolean {
 <style scoped>
 .board-panel {
   min-height: 0;
+  display: grid;
+  padding: clamp(0.75rem, 1.3vw, 1.1rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .board-stage {
   display: grid;
   place-items: center;
   min-height: 0;
+  container-type: size;
 }
 
 .board-grid {
+  --board-grid-gap: 0.26rem;
+  --board-grid-padding: 0.58rem;
+  --board-cell-min-size: 2rem;
+  --board-min-size: calc(
+    (var(--board-cell-min-size) * 8) +
+    (var(--board-grid-gap) * 7) +
+    (var(--board-grid-padding) * 2)
+  );
   display: grid;
-  gap: 0.26rem;
+  gap: var(--board-grid-gap);
   inline-size: min(100%, var(--board-size-limit));
-  padding: 0.58rem;
+  inline-size: min(100cqw, 100cqh, var(--board-size-limit));
+  min-inline-size: min(100%, var(--board-min-size));
+  aspect-ratio: 1;
+  padding: var(--board-grid-padding);
   border-radius: 1.25rem;
   background:
     linear-gradient(160deg, rgba(107, 121, 255, 0.18), rgba(14, 23, 53, 0.4)),
@@ -148,7 +165,7 @@ function isLastMoveCell(cell: Cell): boolean {
 
 .board-row {
   display: grid;
-  gap: 0.26rem;
+  gap: var(--board-grid-gap);
 }
 
 .board-cell {
@@ -163,6 +180,8 @@ function isLastMoveCell(cell: Cell): boolean {
   display: grid;
   place-items: center;
   gap: 0.1rem;
+  min-inline-size: var(--board-cell-min-size);
+  min-block-size: var(--board-cell-min-size);
   padding: 0.14rem;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 0.64rem;
@@ -256,16 +275,37 @@ function isLastMoveCell(cell: Cell): boolean {
 
 @media (max-height: 860px) {
   .board-grid {
-    gap: 0.22rem;
-    padding: 0.52rem;
+    --board-grid-gap: 0.22rem;
+    --board-grid-padding: 0.52rem;
   }
 
   .board-row {
-    gap: 0.22rem;
+    gap: var(--board-grid-gap);
+  }
+}
+
+@media (max-width: 720px), (max-height: 520px) {
+  .board-panel {
+    padding: 0.55rem;
+  }
+
+  .board-stage {
+    place-items: start center;
+  }
+
+  .board-grid {
+    --board-grid-gap: 0.2rem;
+    --board-grid-padding: 0.42rem;
+    border-radius: 1rem;
   }
 
   .board-cell {
-    border-radius: 0.52rem;
+    border-radius: 0.5rem;
+  }
+
+  .last-move-ring {
+    inset: 0.14rem;
+    border-radius: calc(0.5rem - 0.1rem);
   }
 }
 </style>

@@ -453,4 +453,51 @@ select:focus {
     width: 100%;
   }
 }
+
+@media (max-width: 720px), (max-height: 520px) {
+  .setup-card {
+    gap: 0.8rem;
+  }
+
+  .setup-grid,
+  .player-card,
+  .computer-config {
+    gap: 0.75rem;
+  }
+
+  .player-card {
+    padding: 0.95rem;
+  }
+
+  .field {
+    gap: 0.55rem;
+  }
+
+  input,
+  select,
+  .generated-name,
+  .controller-button,
+  .color-chip {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .generated-name {
+    min-height: 2.75rem;
+  }
+
+  .color-grid {
+    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    gap: 0.55rem;
+  }
+
+  .setup-actions {
+    gap: 0.65rem;
+    padding-top: 0.65rem;
+  }
+
+  .primary-button,
+  .secondary-button {
+    padding: 0.85rem 1.15rem;
+  }
+}
 </style>

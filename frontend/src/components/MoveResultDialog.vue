@@ -90,4 +90,22 @@ const emit = defineEmits<{
     width: 100%;
   }
 }
+
+@media (max-width: 720px), (max-height: 520px) {
+  .result-dialog {
+    gap: 0.8rem;
+  }
+
+  .result-list {
+    gap: 0.6rem;
+  }
+
+  .result-item {
+    padding: 0.8rem 0.88rem;
+  }
+
+  .primary-button {
+    padding: 0.85rem 1.1rem;
+  }
+}
 </style>
