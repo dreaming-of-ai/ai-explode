@@ -40,6 +40,11 @@ export const HEADER_POPUP_DEFINITIONS: Record<HeaderPopupId, HeaderPopupDefiniti
     label: 'Settings',
     title: 'Settings',
   },
+  'game-info': {
+    id: 'game-info',
+    label: 'Game Info',
+    title: 'Game Info',
+  },
 }
 
 export const HEADER_POPUP_ENTRIES = HEADER_POPUP_ORDER.map((popupId) => HEADER_POPUP_DEFINITIONS[popupId])

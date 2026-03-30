@@ -1,13 +1,27 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import GameInfoPanel from '@/components/GameInfoPanel.vue'
 import { GAMING_RULES_SECTIONS, INFORMATION_POPUP_CONTENT } from '@/data/headerPopups'
-import type { ExplosionDelayOption, ExplosionDelayPreset, HeaderPopupId } from '@/types/game'
+import type {
+  ExplosionDelayOption,
+  ExplosionDelayPreset,
+  GamePhase,
+  HeaderPopupId,
+  PlayerConfig,
+  ScoreboardEntry,
+} from '@/types/game'
 
 const props = defineProps<{
   popupId: HeaderPopupId
   selectedExplosionDelayPreset: ExplosionDelayPreset
   explosionDelayOptions: ReadonlyArray<ExplosionDelayOption>
+  entries: ScoreboardEntry[]
+  activePlayer: PlayerConfig | null
+  winnerPlayer: PlayerConfig | null
+  round: number
+  phase: GamePhase
+  isConcluded: boolean
 }>()
 
 const emit = defineEmits<{
@@ -17,6 +31,7 @@ const emit = defineEmits<{
 const isRulesPopup = computed(() => props.popupId === 'gaming-rules')
 const isInformationPopup = computed(() => props.popupId === 'information')
 const isSettingsPopup = computed(() => props.popupId === 'settings')
+const isGameInfoPopup = computed(() => props.popupId === 'game-info')
 </script>
 
 <template>
@@ -57,6 +72,20 @@ const isSettingsPopup = computed(() => props.popupId === 'settings')
     >
       {{ INFORMATION_POPUP_CONTENT.linkLabel }}
     </a>
+  </section>
+
+  <section
+    v-else-if="isGameInfoPopup"
+    class="game-info-content"
+  >
+    <GameInfoPanel
+      :entries="entries"
+      :active-player="activePlayer"
+      :winner-player="winnerPlayer"
+      :round="round"
+      :phase="phase"
+      :is-concluded="isConcluded"
+    />
   </section>
 
   <section
@@ -124,6 +153,11 @@ const isSettingsPopup = computed(() => props.popupId === 'settings')
 }
 
 .settings-content {
+  display: grid;
+  min-height: 0;
+}
+
+.game-info-content {
   display: grid;
   min-height: 0;
 }

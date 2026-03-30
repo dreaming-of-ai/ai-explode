@@ -10,7 +10,7 @@ export type GamePhase = 'idle' | 'playing'
 
 export type LegalPageId = 'imprint' | 'privacy-policy'
 
-export type HeaderPopupId = 'gaming-rules' | 'information' | 'settings'
+export type HeaderPopupId = 'gaming-rules' | 'information' | 'settings' | 'game-info'
 
 export type ModalState =
   | 'closed'

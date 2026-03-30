@@ -6,6 +6,7 @@ import HeaderIconBar from '@/components/HeaderIconBar.vue'
 import HeaderPopupContent from '@/components/HeaderPopupContent.vue'
 import LegalFooter from '@/components/LegalFooter.vue'
 import LegalPage from '@/components/LegalPage.vue'
+import MobileShellBar from '@/components/MobileShellBar.vue'
 import MoveResultDialog from '@/components/MoveResultDialog.vue'
 import PlayerSetup from '@/components/PlayerSetup.vue'
 import PlayerSidebar from '@/components/PlayerSidebar.vue'
@@ -114,6 +115,16 @@ const isModalOpen = computed(
             @play-cell="playCell($event.row, $event.col)"
           />
 
+          <MobileShellBar
+            :active-player="activePlayer"
+            :winner-player="winnerPlayer"
+            :round="gameState.round"
+            :phase="gameState.phase"
+            :is-concluded="gameState.isConcluded"
+            @new-game="openNewGame"
+            @open-info="openHeaderPopup('game-info')"
+          />
+
           <PlayerSidebar
             :entries="scoreboardEntries"
             :active-player="activePlayer"
@@ -198,6 +209,12 @@ const isModalOpen = computed(
         :popup-id="activeHeaderPopup"
         :selected-explosion-delay-preset="explosionDelayPreset"
         :explosion-delay-options="explosionDelayOptions"
+        :entries="scoreboardEntries"
+        :active-player="activePlayer"
+        :winner-player="winnerPlayer"
+        :round="gameState.round"
+        :phase="gameState.phase"
+        :is-concluded="gameState.isConcluded"
         @update-explosion-delay-preset="updateExplosionDelayPreset"
       />
     </ShellModal>
@@ -279,24 +296,14 @@ h1 {
   overflow: hidden;
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1023px) {
   .shell-layout {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(0, 1fr) auto;
   }
 }
 
-@media (max-width: 840px) {
-  .app-header {
-    flex-wrap: wrap;
-  }
-
-  .header-actions {
-    width: 100%;
-  }
-}
-
-@media (max-width: 720px) {
+@media (max-width: 767px) {
   .app-shell {
     gap: 0.55rem;
   }
@@ -310,12 +317,11 @@ h1 {
   }
 
   .brand-subtitle {
-    white-space: normal;
-    font-size: 0.84rem;
+    display: none;
   }
 
   .shell-layout {
-    gap: 0.65rem;
+    gap: 0.55rem;
   }
 }
 
@@ -326,38 +332,50 @@ h1 {
   }
 }
 
-@media (max-height: 860px) and (max-width: 1080px) {
+@media (max-height: 860px) and (max-width: 1023px) {
   .app-shell--board {
     --board-size-limit: 40rem;
   }
 }
 
-@media (orientation: landscape) and (max-height: 520px) {
+@media (max-width: 767px) and (orientation: landscape) and (max-height: 520px) {
   .app-shell {
     gap: 0.4rem;
   }
 
   .app-header {
-    flex-wrap: nowrap;
     align-items: center;
     gap: 0.5rem 0.85rem;
-  }
-
-  .header-actions {
-    width: auto;
   }
 
   h1 {
     font-size: clamp(1.6rem, 4.6vw, 2.15rem);
   }
 
+  .shell-layout {
+    gap: 0.45rem;
+  }
+}
+
+@media (min-width: 1024px) and (orientation: landscape) and (max-height: 520px) {
+  .app-shell {
+    gap: 0.45rem;
+  }
+
+  .app-header {
+    align-items: center;
+    gap: 0.6rem 0.95rem;
+  }
+
   .brand-subtitle {
     display: none;
   }
 
+  .header-actions {
+    width: auto;
+  }
+
   .shell-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(10.75rem, 12rem);
-    grid-template-rows: minmax(0, 1fr);
     gap: 0.55rem;
   }
 }
