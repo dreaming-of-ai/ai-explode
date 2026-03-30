@@ -65,13 +65,31 @@ const isGameInfoPopup = computed(() => props.popupId === 'game-info')
     <p>{{ INFORMATION_POPUP_CONTENT.details }}</p>
 
     <a
-      class="info-link"
-      :href="INFORMATION_POPUP_CONTENT.linkHref"
-      target="_blank"
-      rel="noreferrer"
+        class="info-link"
+        :href="INFORMATION_POPUP_CONTENT.linkHref"
+        target="_blank"
+        rel="noreferrer"
     >
       {{ INFORMATION_POPUP_CONTENT.linkLabel }}
     </a>
+
+    <section class="info-release-card">
+      <h3>{{ INFORMATION_POPUP_CONTENT.releasesTitle }}</h3>
+
+      <ul class="info-release-list">
+        <li
+          v-for="release in INFORMATION_POPUP_CONTENT.releases"
+          :key="`${release.date}-${release.version}`"
+          class="info-release-item"
+        >
+          <div class="info-release-meta">
+            <span>{{ release.date }}</span>
+            <strong>{{ release.version }}</strong>
+          </div>
+          <p>{{ release.description }}</p>
+        </li>
+      </ul>
+    </section>
   </section>
 
   <section
@@ -150,6 +168,49 @@ const isGameInfoPopup = computed(() => props.popupId === 'game-info')
   background: rgba(7, 12, 28, 0.78);
   color: var(--text-soft);
   line-height: 1.6;
+}
+
+.info-release-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  background: rgba(10, 16, 35, 0.62);
+}
+
+.info-release-list {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.info-release-item {
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.9rem;
+  background: rgba(7, 12, 28, 0.72);
+}
+
+.info-release-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--text-main);
+  font-size: 0.86rem;
+}
+
+.info-release-meta span {
+  color: var(--text-soft);
+}
+
+.info-release-item p {
+  color: var(--text-soft);
 }
 
 .settings-content {
@@ -273,6 +334,10 @@ ul {
 @media (max-width: 720px) {
   .info-content,
   .rules-section {
+    padding: 0.9rem;
+  }
+
+  .info-release-card {
     padding: 0.9rem;
   }
 }

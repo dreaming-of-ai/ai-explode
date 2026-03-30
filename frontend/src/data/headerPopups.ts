@@ -16,6 +16,14 @@ export interface InformationPopupContent {
   details: string
   linkLabel: string
   linkHref: string
+  releasesTitle: string
+  releases: ReadonlyArray<InformationPopupReleaseEntry>
+}
+
+export interface InformationPopupReleaseEntry {
+  date: string
+  version: string
+  description: string
 }
 
 export const HEADER_POPUP_ORDER: HeaderPopupId[] = [
@@ -57,6 +65,19 @@ export const INFORMATION_POPUP_CONTENT: InformationPopupContent = {
     'If you are curious about the technical side, the project README walks through the architecture, workflow, and development setup in more detail.',
   linkLabel: 'Read the technical project notes on GitHub',
   linkHref: 'https://github.com/dreaming-of-ai/ai-explode/blob/main/README.md',
+  releasesTitle: 'Release History',
+  releases: [
+    {
+      date: '2026-03-30',
+      version: 'v1.0.1',
+      description: 'Improvements to mobile screenlayout.',
+    },
+    {
+      date: '2026-03-29',
+      version: 'v1.0.0',
+      description: 'Initial playable release with human vs. human games or human vs. a RANDOM computer player.',
+    },
+  ],
 }
 
 export const GAMING_RULES_SECTIONS: ReadonlyArray<RulesSummarySection> = [

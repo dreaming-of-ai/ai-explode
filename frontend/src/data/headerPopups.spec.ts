@@ -34,4 +34,21 @@ describe('header popups data', () => {
       'https://github.com/dreaming-of-ai/ai-explode/blob/main/README.md',
     )
   })
+
+  it('includes manually maintainable release history entries', () => {
+    expect(INFORMATION_POPUP_CONTENT.releasesTitle).toBe('Release History')
+    expect(INFORMATION_POPUP_CONTENT.releases).toHaveLength(2)
+    expect(INFORMATION_POPUP_CONTENT.releases).toEqual([
+      {
+        date: '2026-03-30',
+        version: 'v0.0.1',
+        description: 'Dummy release entry for the first tracked application milestone.',
+      },
+      {
+        date: '2026-04-06',
+        version: 'v0.0.2',
+        description: 'Dummy release entry for the next manually maintained release note.',
+      },
+    ])
+  })
 })
