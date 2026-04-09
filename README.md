@@ -5,6 +5,8 @@
 **AI Explode** is a game project inspired by a type of gameplay I've always loved.
 Details can be found in the [Game Overview](/papers/game-overview.md).
 
+The latest deployed version of the game can be found from here: [https://ai-explode.de/](https://ai-explode.de/)
+
 In parallel, the project serves as a practical demonstration of how to build and operate an agentic development 
 environment with **Codex** and **Claude Code**.
 Beyond developing the game itself, the project also captures the surrounding workflow: creating specifications, 
