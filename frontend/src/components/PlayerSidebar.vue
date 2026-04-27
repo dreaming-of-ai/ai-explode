@@ -49,7 +49,6 @@ const emit = defineEmits<{
 }
 
 .sidebar-action {
-  order: 1;
   inline-size: 100%;
   margin-top: 4px;
   display: grid;

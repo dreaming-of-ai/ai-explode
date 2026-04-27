@@ -44,6 +44,8 @@
 ## 2026-03-29 Delayed Explosion Playback
 
 - Presentation-paced move playback works best with a separate displayed board in `frontend/src/composables/useGameShell.ts`. Keeping `gameState` authoritative until the move fully resolves lets the board animate intermediate explosion steps without advancing the turn, drifting the scoreboard, or firing result popups against an unstable board.
+- Explosion burst markers need a render window before finalizing the move. Clear and re-set the marker through a Vue tick when the origin cell changes, then hold the final playback frame long enough for the CSS animation to start before clearing the marker.
+- If explosion animation is meant to be visible by default, `DEFAULT_EXPLOSION_DELAY_PRESET` cannot be `none`, because the shell intentionally skips playback when the effective delay is zero.
 
 ## 2026-03-29 Frontend Toolchain Baseline
 

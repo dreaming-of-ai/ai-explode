@@ -57,11 +57,22 @@ https://github.com/dreaming-of-ai/ai-explode-testing
 The `AGENTS.md` must be located at the top level and not below the `.agent` directory for **Codex** to pick it up.
 This means the first three sessions were done without the AI picking up the `AGENTS.md` file.
 
-## Tracking Progress & Time (overall 14h)
+## Tracking Progress & Time (overall 16h)
+
+### Session 8 – 2026-04-27 / 2h
+
+#### General
+
+Used **Claude Design** to improve the GUI. 
+
+#### Implementation
+
+- Used **Opus 4.7** to initially implement the changes.
+- Used **GTP-5.5** to review the changes and to do some minor adjustments.
 
 ### Session 7 – 2026-03-29 / 2h
 
-### General
+#### General
 
 Used **Opus 4.6**
 - to write the `technical-overview.md` document and starting to describe potential backend features.

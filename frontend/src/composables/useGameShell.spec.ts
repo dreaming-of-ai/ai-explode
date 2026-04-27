@@ -25,6 +25,8 @@ import {
 } from '@/composables/useGameShell'
 import type { Cell, GameState, SetupPlayer } from '@/types/game'
 
+const EXPLOSION_BURST_ANIMATION_MS = 260
+
 function createHumanPlayer(id: number, name: string, colorId: string): SetupPlayer {
   return {
     id,
@@ -589,6 +591,12 @@ describe('play flow', () => {
 })
 
 describe('shell flow', () => {
+  it('defaults to low explosion delay so new games show visible burst playback', () => {
+    const shell = useGameShell()
+
+    expect(shell.explosionDelayPreset.value).toBe('low')
+  })
+
   it('ignores manual clicks while a computer-controlled player is active', () => {
     vi.useFakeTimers()
 
@@ -687,6 +695,7 @@ describe('shell flow', () => {
       round: 2,
     }
 
+    shell.updateExplosionDelayPreset('none')
     shell.playCell(0, 0)
 
     expect(shell.modalState.value).toBe('move-result')
@@ -825,7 +834,15 @@ describe('shell flow', () => {
 
     await vi.advanceTimersByTimeAsync(EXPLOSION_DELAY_MEDIUM_MS)
 
+    expect(shell.isResolvingMove.value).toBe(true)
+    expect(shell.explodingCells.value).toEqual(new Set(['0-0']))
+    expect(shell.displayBoard.value[0][0]).toMatchObject({ owner: 1, load: 1 })
+    expect(shell.gameState.value.board[0][0]).toMatchObject({ owner: 1, load: 3 })
+
+    await vi.advanceTimersByTimeAsync(EXPLOSION_BURST_ANIMATION_MS)
+
     expect(shell.isResolvingMove.value).toBe(false)
+    expect(shell.explodingCells.value).toEqual(new Set())
     expect(shell.displayBoard.value[0][0]).toMatchObject({ owner: 1, load: 1 })
     expect(shell.gameState.value.board[0][0]).toMatchObject({ owner: 1, load: 1 })
     expect(shell.gameState.value.activePlayerIndex).toBe(1)
@@ -913,6 +930,12 @@ describe('shell flow', () => {
     shell.playCell(0, 0)
 
     await vi.advanceTimersByTimeAsync(EXPLOSION_DELAY_MEDIUM_MS * 3)
+
+    expect(shell.isResolvingMove.value).toBe(true)
+    expect(shell.explodingCells.value).toEqual(new Set(['0-0']))
+    expect(shell.gameState.value.activePlayerIndex).toBe(0)
+
+    await vi.advanceTimersByTimeAsync(EXPLOSION_BURST_ANIMATION_MS)
 
     expect(shell.isResolvingMove.value).toBe(false)
     expect(shell.gameState.value.activePlayerIndex).toBe(1)

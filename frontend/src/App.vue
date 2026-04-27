@@ -36,6 +36,7 @@ const {
   isMoveResultOpen,
   isHeaderPopupOpen,
   lastMoveIndicator,
+  explodingCells,
   moveResultPopup,
   updatePlayerName,
   updatePlayerController,
@@ -111,6 +112,7 @@ const isModalOpen = computed(
             :players="gameState.players"
             :phase="gameState.phase"
             :last-move-indicator="lastMoveIndicator"
+            :exploding-cells="explodingCells"
             :is-cell-playable="isCellPlayable"
             @play-cell="playCell($event.row, $event.col)"
           />

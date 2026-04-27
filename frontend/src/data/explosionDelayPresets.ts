@@ -5,7 +5,7 @@ export const EXPLOSION_DELAY_LOW_MS = 50
 export const EXPLOSION_DELAY_MEDIUM_MS = 100
 export const EXPLOSION_DELAY_HIGH_MS = 250
 
-export const DEFAULT_EXPLOSION_DELAY_PRESET: ExplosionDelayPreset = 'none'
+export const DEFAULT_EXPLOSION_DELAY_PRESET: ExplosionDelayPreset = 'low'
 
 export const EXPLOSION_DELAY_MS_BY_PRESET: Record<ExplosionDelayPreset, number> = {
   none: EXPLOSION_DELAY_NONE_MS,

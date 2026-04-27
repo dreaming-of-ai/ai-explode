@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { COMPUTER_PLAYERS, getComputerPlayerDisplayName } from '@/data/computerPlayers'
+import { computed } from 'vue'
+
 import type {
   ComputerPlayerId,
   PlayerColor,
@@ -8,7 +9,7 @@ import type {
   SetupValidation,
 } from '@/types/game'
 
-defineProps<{
+const props = defineProps<{
   players: SetupPlayer[]
   validation: SetupValidation
   canAddPlayer: boolean
@@ -30,12 +31,18 @@ function setController(playerId: number, controller: PlayerController) {
   emit('update-controller', { playerId, controller })
 }
 
-function updateComputerPlayer(playerId: number, event: Event) {
-  emit('update-computer-player', {
-    playerId,
-    computerPlayerId: (event.target as HTMLSelectElement).value as ComputerPlayerId,
-  })
+function getSelectedColor(player: SetupPlayer): PlayerColor | null {
+  const available = props.getAvailableColors(player.id)
+  return available.find((color) => color.id === player.colorId) ?? null
 }
+
+const cards = computed(() =>
+  props.players.map((player, index) => ({
+    player,
+    index,
+    selectedColor: getSelectedColor(player),
+  })),
+)
 </script>
 
 <template>
@@ -47,35 +54,46 @@ function updateComputerPlayer(playerId: number, event: Event) {
 
     <div class="setup-grid">
       <article
-        v-for="(player, index) in players"
+        v-for="{ player, index, selectedColor } in cards"
         :key="player.id"
         class="player-card"
       >
         <div class="player-card__top">
-          <div>
-            <p class="player-label">Player {{ index + 1 }}</p>
-            <h4>{{ player.controller === 'computer' ? 'Auto pilot engaged' : 'Ready for orbit' }}</h4>
-          </div>
-
-          <button
-            v-if="canRemovePlayer"
-            class="ghost-button"
-            type="button"
-            @click="emit('remove-player', { playerId: player.id })"
+          <span
+            class="player-index-badge"
+            :style="
+              selectedColor
+                ? { background: `linear-gradient(135deg, ${selectedColor.primary}, ${selectedColor.dark})` }
+                : {}
+            "
           >
-            Remove
-          </button>
-        </div>
+            {{ index + 1 }}
+          </span>
 
-        <div class="field">
-          <span>Controller</span>
-          <div class="controller-toggle">
+          <div class="controller-toggle compact">
             <button
               class="controller-button"
               :class="{ 'is-selected': player.controller === 'human' }"
               type="button"
               @click="setController(player.id, 'human')"
             >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="12"
+                  cy="8"
+                  r="4"
+                />
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+              </svg>
               Human
             </button>
 
@@ -85,21 +103,70 @@ function updateComputerPlayer(playerId: number, event: Event) {
               type="button"
               @click="setController(player.id, 'computer')"
             >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <rect
+                  x="2"
+                  y="3"
+                  width="20"
+                  height="14"
+                  rx="2"
+                />
+                <path d="M8 21h8M12 17v4" />
+              </svg>
               Computer
             </button>
           </div>
+
+          <button
+            v-if="canRemovePlayer"
+            class="ghost-button remove-btn"
+            type="button"
+            aria-label="Remove player"
+            @click="emit('remove-player', { playerId: player.id })"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <line
+                x1="18"
+                y1="6"
+                x2="6"
+                y2="18"
+              />
+              <line
+                x1="6"
+                y1="6"
+                x2="18"
+                y2="18"
+              />
+            </svg>
+          </button>
         </div>
 
-        <label
-          v-if="player.controller === 'human'"
-          class="field"
-        >
-          <span>Name</span>
+        <div class="player-card__body">
           <input
+            v-if="player.controller === 'human'"
+            class="name-input"
             :value="player.name"
             type="text"
             maxlength="18"
-            placeholder="Captain Nova"
+            placeholder="Enter name…"
             @input="
               emit('update-name', {
                 playerId: player.id,
@@ -107,55 +174,29 @@ function updateComputerPlayer(playerId: number, event: Event) {
               })
             "
           />
-        </label>
-
-        <div
-          v-else
-          class="computer-config"
-        >
-          <label class="field">
-            <span>Computer Player</span>
-            <select
-              :value="player.computerPlayerId"
-              @change="updateComputerPlayer(player.id, $event)"
-            >
-              <option
-                v-for="computerPlayer in COMPUTER_PLAYERS"
-                :key="computerPlayer.id"
-                :value="computerPlayer.id"
-              >
-                {{ computerPlayer.name }}
-              </option>
-            </select>
-          </label>
-
-          <div class="field">
-            <span>Generated Name</span>
-            <div class="generated-name">
-              {{ getComputerPlayerDisplayName(player.computerPlayerId, index + 1) }}
-            </div>
+          <div
+            v-else
+            class="generated-name"
+          >
+            Random {{ index + 1 }}
           </div>
-        </div>
 
-        <div class="field">
-          <span>Color</span>
-          <div class="color-grid">
+          <div class="color-chips-row">
             <button
               v-for="color in getAvailableColors(player.id)"
               :key="color.id"
-              class="color-chip"
+              class="color-dot"
               :class="{ 'is-selected': player.colorId === color.id }"
               type="button"
+              :title="color.name"
+              :aria-label="color.name"
               :style="{
                 '--chip-primary': color.primary,
                 '--chip-light': color.light,
                 '--chip-dark': color.dark,
               }"
               @click="emit('update-color', { playerId: player.id, colorId: color.id })"
-            >
-              <span class="color-swatch"></span>
-              <span>{{ color.name }}</span>
-            </button>
+            />
           </div>
         </div>
       </article>
@@ -198,15 +239,14 @@ function updateComputerPlayer(playerId: number, event: Event) {
 <style scoped>
 .setup-card {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
-  gap: 1rem;
+  gap: 1.25rem;
   min-height: 0;
   overflow: hidden;
 }
 
 .section-header {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 
 .eyebrow {
@@ -219,90 +259,68 @@ function updateComputerPlayer(playerId: number, event: Event) {
 
 h3 {
   margin: 0;
-  font-size: clamp(1.5rem, 2.2vw, 2.1rem);
+  font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+  font-weight: 700;
   line-height: 1;
 }
 
 .setup-grid {
   display: grid;
-  gap: 1rem;
+  gap: 0.6rem;
   min-height: 0;
   overflow: auto;
-  padding-right: 0.25rem;
+  padding-right: 0.2rem;
 }
 
 .player-card {
   display: grid;
-  gap: 1rem;
-  padding: 1.2rem;
+  gap: 0.65rem;
+  padding: 0.9rem 1rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.2rem;
+  border-radius: 1rem;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
     rgba(6, 10, 25, 0.78);
 }
 
 .player-card__top {
   display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.player-label {
-  margin: 0 0 0.25rem;
-  color: var(--text-soft);
-  font-size: 0.8rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-h4 {
-  margin: 0;
-  font-size: 1.15rem;
-}
-
-.field {
+.player-index-badge {
   display: grid;
-  gap: 0.7rem;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.55rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #f6fbff;
+  background: linear-gradient(135deg, rgba(109, 231, 255, 0.6), rgba(20, 50, 71, 0.95));
 }
 
-.field span {
-  color: var(--text-soft);
-  font-size: 0.9rem;
+.controller-toggle.compact {
+  display: flex;
+  gap: 0.45rem;
+  flex: 1;
+  min-width: 0;
 }
 
-input,
-select,
-.generated-name {
-  width: 100%;
-  padding: 0.9rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.95rem;
-  background: rgba(9, 16, 36, 0.75);
-  color: var(--text-main);
-  font: inherit;
-}
-
-input:focus,
-select:focus {
-  outline: 2px solid rgba(109, 231, 255, 0.4);
-  outline-offset: 1px;
-}
-
-.computer-config {
-  display: grid;
-  gap: 0.9rem;
-}
-
-.controller-toggle {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem;
+.controller-toggle.compact .controller-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.84rem;
 }
 
 .controller-button {
-  padding: 0.85rem 0.95rem;
+  padding: 0.5rem 0.65rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
   background: rgba(10, 16, 35, 0.88);
@@ -325,66 +343,86 @@ select:focus {
   background: linear-gradient(135deg, rgba(31, 54, 94, 0.92), rgba(9, 16, 36, 0.96));
 }
 
+.remove-btn {
+  padding: 0.4rem;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-card__body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.name-input,
+.generated-name {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  background: rgba(9, 16, 36, 0.75);
+  color: var(--text-main);
+  font: inherit;
+  width: 100%;
+}
+
+.name-input:focus {
+  outline: 2px solid rgba(109, 231, 255, 0.4);
+  outline-offset: 1px;
+}
+
 .generated-name {
   display: grid;
   align-items: center;
-  min-height: 3.1rem;
+  min-height: 2.6rem;
   font-weight: 600;
+  color: var(--text-soft);
+  font-size: 0.92rem;
 }
 
-.color-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.7rem;
+.color-chips-row {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  flex-shrink: 0;
 }
 
-.color-chip {
+.color-dot {
   --chip-primary: var(--accent);
   --chip-light: rgba(109, 231, 255, 0.34);
   --chip-dark: #143247;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0.85rem 0.95rem;
-  border: 1px solid transparent;
+  width: 1.5rem;
+  height: 1.5rem;
   border-radius: 999px;
-  background: rgba(10, 16, 35, 0.88);
-  color: var(--text-main);
-  font: inherit;
+  flex-shrink: 0;
+  border: 2px solid transparent;
+  background: radial-gradient(circle at 35% 30%, var(--chip-light), var(--chip-primary) 55%, var(--chip-dark));
   cursor: pointer;
+  padding: 0;
   transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    background 160ms ease;
+    transform 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
-.color-chip:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--chip-primary) 70%, white);
+.color-dot:hover {
+  transform: scale(1.18);
 }
 
-.color-chip.is-selected {
-  border-color: var(--chip-primary);
-  background: linear-gradient(120deg, var(--chip-dark), rgba(10, 16, 35, 0.96));
-}
-
-.color-swatch {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%, var(--chip-light), var(--chip-primary) 60%, var(--chip-dark));
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+.color-dot.is-selected {
+  border-color: white;
+  box-shadow: 0 0 0 2px var(--chip-primary);
 }
 
 .setup-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.9rem;
+  gap: 0.75rem;
   justify-content: space-between;
-  position: sticky;
-  bottom: 0;
-  padding-top: 0.85rem;
-  background: linear-gradient(180deg, rgba(8, 13, 29, 0), rgba(8, 13, 29, 0.96) 34%);
+  padding-top: 0.1rem;
 }
 
 .primary-button,
@@ -402,7 +440,7 @@ select:focus {
 
 .primary-button,
 .secondary-button {
-  padding: 0.95rem 1.4rem;
+  padding: 0.9rem 1.4rem;
 }
 
 .primary-button {
@@ -417,9 +455,10 @@ select:focus {
 }
 
 .ghost-button {
-  padding: 0.55rem 0.9rem;
+  padding: 0.4rem 0.55rem;
   background: transparent;
   color: var(--text-soft);
+  border-radius: 0.5rem;
 }
 
 .primary-button:hover:not(:disabled),
@@ -436,11 +475,11 @@ select:focus {
 
 .validation-list {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.4rem;
   margin: 0;
   padding-left: 1.1rem;
   color: #ffb6bc;
-  background: rgba(8, 13, 29, 0.96);
+  font-size: 0.9rem;
 }
 
 @media (max-width: 840px) {
@@ -456,48 +495,29 @@ select:focus {
 
 @media (max-width: 720px), (max-height: 520px) {
   .setup-card {
-    gap: 0.8rem;
-  }
-
-  .setup-grid,
-  .player-card,
-  .computer-config {
-    gap: 0.75rem;
+    gap: 0.95rem;
   }
 
   .player-card {
-    padding: 0.95rem;
-  }
-
-  .field {
-    gap: 0.55rem;
-  }
-
-  input,
-  select,
-  .generated-name,
-  .controller-button,
-  .color-chip {
     padding: 0.75rem 0.85rem;
   }
 
-  .generated-name {
-    min-height: 2.75rem;
+  .player-card__body {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
   }
 
-  .color-grid {
-    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
-    gap: 0.55rem;
+  .color-chips-row {
+    justify-content: flex-start;
   }
 
   .setup-actions {
-    gap: 0.65rem;
-    padding-top: 0.65rem;
+    gap: 0.6rem;
   }
 
   .primary-button,
   .secondary-button {
-    padding: 0.85rem 1.15rem;
+    padding: 0.8rem 1.1rem;
   }
 }
 </style>

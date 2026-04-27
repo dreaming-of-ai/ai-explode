@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import type { GamePhase, PlayerConfig, ScoreboardEntry } from '@/types/game'
 
-const props = defineProps<{
+defineProps<{
   entries: ScoreboardEntry[]
   activePlayer: PlayerConfig | null
   winnerPlayer: PlayerConfig | null
@@ -11,26 +9,6 @@ const props = defineProps<{
   phase: GamePhase
   isConcluded: boolean
 }>()
-
-const secondaryTitle = computed(() =>
-  props.phase === 'playing' ? 'Occupied fields' : 'Chain-Reaction Tactics',
-)
-
-const secondaryEyebrow = computed(() =>
-  props.phase === 'playing' ? 'Scoreboard' : 'Game Overview',
-)
-
-const secondaryNote = computed(() => {
-  if (props.phase === 'playing' && props.isConcluded) {
-    return 'The board is locked until you begin the next match.'
-  }
-
-  if (props.phase === 'playing') {
-    return 'Updates after every valid move.'
-  }
-
-  return 'Open the Gaming Rules popup in the header for the full rules.'
-})
 
 function getPlayerStatus(entry: ScoreboardEntry): string {
   if (entry.isWinner) {
@@ -90,14 +68,12 @@ function getPlayerRole(player: PlayerConfig): string {
     </section>
 
     <section class="score-card panel">
-      <div class="score-header">
-        <div>
-          <p class="eyebrow">{{ secondaryEyebrow }}</p>
-          <h3>{{ secondaryTitle }}</h3>
-        </div>
-        <p class="score-note">
-          {{ secondaryNote }}
-        </p>
+      <div
+        v-if="phase !== 'playing'"
+        class="score-header"
+      >
+        <p class="eyebrow">Game Overview</p>
+        <h3>Chain-Reaction Tactics</h3>
       </div>
 
       <ul
@@ -192,7 +168,6 @@ h3 {
 }
 
 .turn-meta,
-.score-note,
 .rule-list {
   color: var(--text-soft);
   line-height: 1.5;
@@ -201,35 +176,25 @@ h3 {
 .score-card {
   inline-size: 100%;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 0.95rem;
+  gap: 0.75rem;
+  align-content: start;
   min-height: 0;
   overflow: hidden;
 }
 
 .score-header {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.score-note {
-  max-width: 12rem;
-  text-align: right;
-  font-size: 0.88rem;
+  display: grid;
+  gap: 0.25rem;
 }
 
 .score-list,
 .rule-list {
   display: grid;
-  gap: 0.7rem;
+  gap: 0.55rem;
   margin: 0;
   padding: 0;
   list-style: none;
-  min-height: 0;
-  overflow: auto;
-  padding-right: 0.2rem;
+  align-content: start;
 }
 
 .score-item {
@@ -239,11 +204,14 @@ h3 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 1rem;
-  padding: 0.82rem 0.9rem;
+  gap: 0.75rem;
+  padding: 0.65rem 0.8rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
+  border-radius: 0.85rem;
   background: rgba(7, 12, 28, 0.8);
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
 }
 
 .score-item.is-active {
@@ -252,7 +220,7 @@ h3 {
 }
 
 .score-item.is-erased {
-  opacity: 0.64;
+  opacity: 0.6;
   border-style: dashed;
 }
 
@@ -296,6 +264,7 @@ h3 {
   color: #f6fbff;
   font-size: 0.88rem;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 strong {
@@ -306,30 +275,19 @@ strong {
 .rule-list {
   padding-left: 1rem;
   list-style: disc;
-}
-
-@media (max-width: 1023px) {
-  .score-header {
-    flex-direction: column;
-    align-items: start;
-  }
-
-  .score-note {
-    max-width: none;
-    text-align: left;
-  }
+  line-height: 1.6;
 }
 
 @media (max-width: 767px), (max-height: 520px) {
   .game-info-panel,
   .turn-card,
   .score-card {
-    gap: 0.75rem;
+    gap: 0.7rem;
   }
 
   .score-item {
-    gap: 0.8rem;
-    padding: 0.75rem 0.8rem;
+    gap: 0.7rem;
+    padding: 0.6rem 0.75rem;
   }
 
   .player-mark {

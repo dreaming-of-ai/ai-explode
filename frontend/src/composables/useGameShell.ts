@@ -1,4 +1,4 @@
-import { computed, ref, watchEffect } from 'vue'
+import { computed, nextTick, ref, watchEffect } from 'vue'
 
 import {
   DEFAULT_COMPUTER_PLAYER_ID,
@@ -47,6 +47,8 @@ const NEIGHBOR_OFFSETS_CLOCKWISE: ReadonlyArray<readonly [number, number]> = [
   [0, -1],
 ]
 
+const EXPLOSION_BURST_ANIMATION_MS = 260
+
 export interface PlayedMoveResult {
   state: GameState
   resultPopup: MoveResultPopup | null
@@ -61,6 +63,7 @@ export interface BoardResolutionPlaybackUpdate {
   row: number
   col: number
   cell: Cell
+  isOrigin: boolean
 }
 
 export interface BoardResolutionPlaybackResult extends BoardResolutionResult {
@@ -328,11 +331,12 @@ function applyPlayedLoad(board: Cell[][], row: number, col: number, activePlayer
   cell.load += 1
 }
 
-function createPlaybackUpdate(cell: Cell): BoardResolutionPlaybackUpdate {
+function createPlaybackUpdate(cell: Cell, isOrigin: boolean): BoardResolutionPlaybackUpdate {
   return {
     row: cell.row,
     col: cell.col,
     cell: { ...cell },
+    isOrigin,
   }
 }
 
@@ -358,11 +362,11 @@ function resolveSingleExplosion(
   adjacentCells.forEach((neighbor) => {
     neighbor.load += 1
     neighbor.owner = activePlayerId
-    explosionUpdates.push(createPlaybackUpdate(neighbor))
+    explosionUpdates.push(createPlaybackUpdate(neighbor, false))
   })
 
   origin.load -= adjacentCells.length
-  explosionUpdates.push(createPlaybackUpdate(origin))
+  explosionUpdates.push(createPlaybackUpdate(origin, true))
 
   return true
 }
@@ -748,6 +752,7 @@ export function useGameShell() {
   const lastMoveIndicator = ref<LastMoveIndicator | null>(null)
   const explosionDelayPreset = ref<ExplosionDelayPreset>(DEFAULT_EXPLOSION_DELAY_PRESET)
   const isResolvingMove = ref(false)
+  const explodingCells = ref<Set<string>>(new Set())
 
   const setupValidation = computed(() => validateSetupPlayers(setupPlayers.value))
   const canAddPlayer = computed(() => setupPlayers.value.length < MAX_PLAYERS)
@@ -829,6 +834,12 @@ export function useGameShell() {
     explosionDelayPreset.value = preset
   }
 
+  async function showExplosionBurst(row: number, col: number) {
+    explodingCells.value = new Set()
+    await nextTick()
+    explodingCells.value = new Set([`${row}-${col}`])
+  }
+
   function openNewGame() {
     if (modalState.value !== 'closed' || isResolvingMove.value) {
       return
@@ -899,6 +910,7 @@ export function useGameShell() {
     moveResultPopup.value = null
     lastMoveIndicator.value = null
     isResolvingMove.value = false
+    explodingCells.value = new Set()
     modalState.value = 'closed'
   }
 
@@ -943,6 +955,7 @@ export function useGameShell() {
       col,
       playerId: activePlayer.id,
     }
+    explodingCells.value = new Set()
 
     if (moveResult.explosionUpdates.length === 0 || effectiveDelayMs === 0) {
       finalizeShellMove(moveResult)
@@ -954,15 +967,24 @@ export function useGameShell() {
 
     try {
       for (const [index, update] of moveResult.explosionUpdates.entries()) {
+        const isFinalUpdate = index === moveResult.explosionUpdates.length - 1
+
         displayBoard.value = applyPlaybackUpdate(displayBoard.value, update)
 
-        if (index < moveResult.explosionUpdates.length - 1) {
+        if (update.isOrigin) {
+          await showExplosionBurst(update.row, update.col)
+        }
+
+        if (isFinalUpdate) {
+          await waitForDuration(Math.max(effectiveDelayMs, EXPLOSION_BURST_ANIMATION_MS))
+        } else {
           await waitForDuration(effectiveDelayMs)
         }
       }
 
       finalizeShellMove(moveResult)
     } finally {
+      explodingCells.value = new Set()
       isResolvingMove.value = false
     }
   }
@@ -1032,6 +1054,7 @@ export function useGameShell() {
     explosionDelayPreset,
     explosionDelayOptions: EXPLOSION_DELAY_OPTIONS,
     isResolvingMove,
+    explodingCells,
     setupValidation,
     canAddPlayer,
     canRemovePlayer,
