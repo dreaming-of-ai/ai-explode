@@ -68,9 +68,14 @@ export const INFORMATION_POPUP_CONTENT: InformationPopupContent = {
   releasesTitle: 'Release History',
   releases: [
     {
+      date: '2026-04-27',
+      version: 'v1.1.0',
+      description: 'GUI enhancements implemented based on suggestions from Claude Design.',
+    },
+    {
       date: '2026-03-30',
       version: 'v1.0.1',
-      description: 'Improvements to mobile screenlayout.',
+      description: 'Improvements to mobile screen layout.',
     },
     {
       date: '2026-03-29',

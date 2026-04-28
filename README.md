@@ -69,6 +69,7 @@ Used **Claude Design** to improve the GUI.
 
 - Used **Opus 4.7** to initially implement the changes.
 - Used **GTP-5.5** to review the changes and to do some minor adjustments.
+- Used **GPT-5-5** to fix vulnerability in `vite`.
 
 ### Session 7 – 2026-03-29 / 2h
 
