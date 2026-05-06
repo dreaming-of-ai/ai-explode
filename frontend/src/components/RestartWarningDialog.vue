@@ -103,9 +103,11 @@ const emit = defineEmits<{
   display: grid;
   gap: 0.95rem;
   padding: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.15rem;
-  background: rgba(7, 12, 28, 0.8);
+  border: 1px solid rgba(93, 232, 255, 0.18);
+  border-radius: 0.55rem;
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.06), rgba(255, 91, 215, 0.04)),
+    rgba(4, 10, 24, 0.82);
 }
 
 .summary-header {
@@ -119,8 +121,9 @@ const emit = defineEmits<{
   margin: 0 0 0.35rem;
   color: var(--accent);
   font-size: 0.78rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0;
   text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(93, 232, 255, 0.18);
 }
 
 h3,
@@ -148,9 +151,11 @@ h3 {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.8rem 0.9rem;
-  border-radius: 1rem;
-  background: rgba(11, 18, 37, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.5rem;
+  background:
+    radial-gradient(circle at 8% 50%, color-mix(in srgb, var(--player-primary) 18%, transparent), transparent 42%),
+    rgba(5, 12, 30, 0.88);
+  border: 1px solid rgba(93, 232, 255, 0.13);
 }
 
 .summary-player {
@@ -173,11 +178,15 @@ h3 {
   place-items: center;
   width: 2.3rem;
   height: 2.3rem;
-  border-radius: 0.8rem;
-  background: linear-gradient(160deg, var(--player-primary), var(--player-dark));
+  border: 1px solid color-mix(in srgb, var(--player-primary) 58%, transparent);
+  border-radius: 0.45rem;
+  background:
+    radial-gradient(circle at 32% 20%, rgba(255, 255, 255, 0.28), transparent 42%),
+    linear-gradient(160deg, var(--player-primary), var(--player-dark));
   color: #f6fbff;
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 800;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--player-primary) 20%, transparent);
 }
 
 strong {
@@ -194,8 +203,8 @@ strong {
 .primary-button,
 .secondary-button {
   padding: 0.95rem 1.35rem;
-  border: none;
-  border-radius: 999px;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
   font: inherit;
   cursor: pointer;
   transition:
@@ -205,13 +214,19 @@ strong {
 }
 
 .primary-button {
-  background: linear-gradient(135deg, #6de7ff, #8bffd4);
+  border-color: rgba(255, 122, 47, 0.5);
+  background:
+    radial-gradient(circle at 22% 20%, rgba(255, 229, 138, 0.3), transparent 42%),
+    linear-gradient(135deg, var(--neon-orange), var(--neon-magenta));
   color: #06101d;
-  font-weight: 700;
+  font-weight: 800;
+  box-shadow: 0 0 24px rgba(255, 122, 47, 0.16);
 }
 
 .secondary-button {
-  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(93, 232, 255, 0.2);
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.1), rgba(5, 12, 30, 0.86));
   color: var(--text-main);
 }
 

@@ -44,34 +44,51 @@ const emit = defineEmits<{
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.9rem;
+  gap: 0.95rem;
   min-height: 0;
 }
 
 .sidebar-action {
   inline-size: 100%;
   margin-top: 4px;
+  position: relative;
+  overflow: hidden;
   display: grid;
   gap: 0.12rem;
   justify-items: start;
   padding: 0.9rem 1rem;
-  border: 1px solid rgba(109, 231, 255, 0.22);
-  border-radius: 1rem;
+  border: 1px solid rgba(255, 122, 47, 0.44);
+  border-radius: 0.55rem;
   background:
-    linear-gradient(135deg, rgba(20, 33, 63, 0.96), rgba(8, 14, 30, 0.92)),
-    rgba(7, 14, 31, 0.78);
+    radial-gradient(circle at 14% 20%, rgba(255, 229, 138, 0.28), transparent 42%),
+    linear-gradient(135deg, rgba(255, 122, 47, 0.22), rgba(255, 91, 215, 0.1) 44%, rgba(5, 11, 28, 0.96)),
+    rgba(7, 14, 31, 0.86);
   color: var(--text-main);
   text-align: left;
   cursor: pointer;
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.26),
+    0 0 28px rgba(255, 122, 47, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   transition:
     transform 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease;
 }
 
+.sidebar-action::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0.75rem;
+  bottom: 0.42rem;
+  height: 1px;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-orange), var(--neon-magenta));
+  opacity: 0.58;
+}
+
 .sidebar-action span {
   font-size: 0.98rem;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .sidebar-action small {
@@ -81,8 +98,11 @@ const emit = defineEmits<{
 
 .sidebar-action:hover {
   transform: translateY(-1px);
-  border-color: rgba(109, 231, 255, 0.38);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  border-color: rgba(255, 229, 138, 0.72);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.3),
+    0 0 34px rgba(255, 122, 47, 0.18),
+    0 0 28px rgba(93, 232, 255, 0.1);
 }
 
 @media (max-width: 1023px) {

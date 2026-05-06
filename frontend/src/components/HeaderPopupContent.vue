@@ -163,9 +163,11 @@ const isGameInfoPopup = computed(() => props.popupId === 'game-info')
   gap: 0.95rem;
   align-content: start;
   padding: 0.95rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
-  background: rgba(7, 12, 28, 0.78);
+  border: 1px solid rgba(93, 232, 255, 0.18);
+  border-radius: 0.55rem;
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.06), rgba(255, 91, 215, 0.04)),
+    rgba(4, 10, 24, 0.82);
   color: var(--text-soft);
   line-height: 1.6;
 }
@@ -174,9 +176,9 @@ const isGameInfoPopup = computed(() => props.popupId === 'game-info')
   display: grid;
   gap: 0.75rem;
   padding: 0.95rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
-  background: rgba(10, 16, 35, 0.62);
+  border: 1px solid rgba(93, 232, 255, 0.16);
+  border-radius: 0.5rem;
+  background: rgba(5, 12, 30, 0.74);
 }
 
 .info-release-list {
@@ -191,9 +193,9 @@ const isGameInfoPopup = computed(() => props.popupId === 'game-info')
   display: grid;
   gap: 0.28rem;
   padding: 0.75rem 0.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 0.9rem;
-  background: rgba(7, 12, 28, 0.72);
+  border: 1px solid rgba(93, 232, 255, 0.12);
+  border-radius: 0.45rem;
+  background: rgba(4, 10, 24, 0.76);
 }
 
 .info-release-meta {
@@ -227,9 +229,11 @@ const isGameInfoPopup = computed(() => props.popupId === 'game-info')
   display: grid;
   gap: 1rem;
   padding: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
-  background: rgba(7, 12, 28, 0.78);
+  border: 1px solid rgba(93, 232, 255, 0.18);
+  border-radius: 0.55rem;
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.06), rgba(255, 91, 215, 0.04)),
+    rgba(4, 10, 24, 0.82);
 }
 
 .settings-copy {
@@ -242,8 +246,9 @@ const isGameInfoPopup = computed(() => props.popupId === 'game-info')
 .settings-label {
   color: var(--accent);
   font-size: 0.78rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0;
   text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(93, 232, 255, 0.18);
 }
 
 .settings-grid {
@@ -257,9 +262,11 @@ const isGameInfoPopup = computed(() => props.popupId === 'game-info')
   gap: 0.28rem;
   justify-items: start;
   padding: 0.95rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 1rem;
-  background: rgba(10, 16, 35, 0.88);
+  border: 1px solid rgba(93, 232, 255, 0.16);
+  border-radius: 0.5rem;
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.06), rgba(10, 16, 35, 0.88)),
+    rgba(10, 16, 35, 0.88);
   color: var(--text-main);
   font: inherit;
   cursor: pointer;
@@ -272,12 +279,15 @@ const isGameInfoPopup = computed(() => props.popupId === 'game-info')
 .settings-option:hover,
 .settings-option:focus-visible {
   transform: translateY(-1px);
-  border-color: rgba(109, 231, 255, 0.34);
+  border-color: rgba(255, 229, 138, 0.48);
 }
 
 .settings-option.is-selected {
-  border-color: rgba(109, 231, 255, 0.58);
-  background: linear-gradient(135deg, rgba(31, 54, 94, 0.92), rgba(9, 16, 36, 0.96));
+  border-color: rgba(255, 122, 47, 0.62);
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255, 229, 138, 0.22), transparent 44%),
+    linear-gradient(135deg, rgba(255, 122, 47, 0.24), rgba(9, 16, 36, 0.96));
+  box-shadow: 0 0 18px rgba(255, 122, 47, 0.12);
 }
 
 .settings-option small {
@@ -289,9 +299,11 @@ const isGameInfoPopup = computed(() => props.popupId === 'game-info')
   display: grid;
   gap: 0.55rem;
   padding: 0.95rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
-  background: rgba(7, 12, 28, 0.78);
+  border: 1px solid rgba(93, 232, 255, 0.18);
+  border-radius: 0.55rem;
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.055), rgba(255, 91, 215, 0.035)),
+    rgba(4, 10, 24, 0.82);
 }
 
 h3,

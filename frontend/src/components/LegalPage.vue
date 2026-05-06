@@ -88,14 +88,15 @@ function getHeadingTag(level: LegalContentHeadingLevel): 'h2' | 'h3' | 'h4' {
 }
 
 .legal-page__return {
-  border: 1px solid rgba(109, 231, 255, 0.28);
-  border-radius: 999px;
+  border: 1px solid rgba(255, 122, 47, 0.44);
+  border-radius: 0.5rem;
   padding: 0.72rem 1.15rem;
   background:
-    linear-gradient(135deg, rgba(19, 32, 61, 0.96), rgba(7, 13, 30, 0.92)),
+    radial-gradient(circle at 22% 20%, rgba(255, 229, 138, 0.24), transparent 42%),
+    linear-gradient(135deg, rgba(255, 122, 47, 0.24), rgba(255, 91, 215, 0.12), rgba(7, 13, 30, 0.92)),
     rgba(7, 14, 31, 0.78);
   color: var(--text-main);
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
   transition:
     transform 160ms ease,
@@ -105,8 +106,10 @@ function getHeadingTag(level: LegalContentHeadingLevel): 'h2' | 'h3' | 'h4' {
 
 .legal-page__return:hover {
   transform: translateY(-1px);
-  border-color: rgba(109, 231, 255, 0.42);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 229, 138, 0.62);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.24),
+    0 0 24px rgba(255, 122, 47, 0.14);
 }
 
 .legal-page__scroll {
@@ -142,7 +145,7 @@ function getHeadingTag(level: LegalContentHeadingLevel): 'h2' | 'h3' | 'h4' {
 .legal-page__article :deep(h4) {
   font-size: 0.98rem;
   color: var(--text-soft);
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 

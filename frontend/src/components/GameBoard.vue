@@ -207,11 +207,24 @@ function isExplodingCell(cell: Cell): boolean {
 
 <style scoped>
 .board-panel {
+  position: relative;
   min-height: 0;
   display: grid;
   grid-template-rows: minmax(0, 1fr);
   padding: clamp(0.75rem, 1.3vw, 1.1rem);
   overflow: hidden;
+}
+
+.board-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0.5rem;
+  pointer-events: none;
+  border: 1px solid rgba(255, 122, 47, 0.18);
+  border-radius: 0.5rem;
+  box-shadow:
+    inset 0 0 20px rgba(255, 122, 47, 0.06),
+    0 0 22px rgba(93, 232, 255, 0.08);
 }
 
 .board-stage {
@@ -228,20 +241,49 @@ function isExplodingCell(cell: Cell): boolean {
 .board-grid {
   --board-grid-gap: 0.26rem;
   --board-grid-padding: 0.65rem;
+  position: relative;
   display: grid;
   grid-auto-rows: 1fr;
   gap: var(--board-grid-gap);
   padding: var(--board-grid-padding);
   width: min(100cqw, 100cqh, var(--board-size-limit, 46rem));
   height: min(100cqw, 100cqh, var(--board-size-limit, 46rem));
-  border-radius: 1.35rem;
+  border: 1px solid rgba(93, 232, 255, 0.42);
+  border-radius: 0.75rem;
   background:
-    linear-gradient(160deg, rgba(80, 100, 220, 0.14), rgba(14, 23, 53, 0.5)),
-    rgba(4, 8, 20, 0.96);
+    radial-gradient(circle at 18% 14%, rgba(255, 122, 47, 0.2), transparent 18%),
+    radial-gradient(circle at 82% 22%, rgba(255, 91, 215, 0.18), transparent 22%),
+    linear-gradient(rgba(93, 232, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(93, 232, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(160deg, rgba(39, 136, 255, 0.2), rgba(5, 10, 24, 0.68)),
+    rgba(2, 5, 14, 0.98);
+  background-size:
+    auto,
+    auto,
+    2.1rem 2.1rem,
+    2.1rem 2.1rem,
+    auto,
+    auto;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.07),
-    inset 0 0 60px rgba(60, 80, 180, 0.08);
+    0 0 0 1px rgba(255, 91, 215, 0.16),
+    0 0 34px rgba(93, 232, 255, 0.18),
+    0 0 70px rgba(255, 91, 215, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 0 70px rgba(39, 136, 255, 0.16);
   transition: opacity 300ms ease;
+}
+
+.board-grid::before {
+  content: '';
+  position: absolute;
+  inset: var(--board-grid-padding);
+  pointer-events: none;
+  border-radius: 0.48rem;
+  background:
+    linear-gradient(90deg, transparent, rgba(93, 232, 255, 0.16), transparent),
+    linear-gradient(180deg, transparent, rgba(255, 122, 47, 0.11), transparent);
+  mix-blend-mode: screen;
+  opacity: 0.56;
 }
 
 .board-grid--idle {
@@ -266,12 +308,12 @@ function isExplodingCell(cell: Cell): boolean {
   place-items: center;
   min-inline-size: 1.8rem;
   min-block-size: 1.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.055);
-  border-radius: 0.7rem;
+  border: 1px solid rgba(93, 232, 255, 0.24);
+  border-radius: 0.38rem;
   overflow: hidden;
   background:
-    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.07), transparent 55%),
-    rgba(10, 16, 36, 0.88);
+    radial-gradient(circle at 30% 16%, rgba(93, 232, 255, 0.16), transparent 54%),
+    linear-gradient(145deg, rgba(10, 25, 54, 0.92), rgba(2, 6, 16, 0.96));
   color: var(--text-main);
   cursor: pointer;
   transition:
@@ -281,36 +323,75 @@ function isExplodingCell(cell: Cell): boolean {
     opacity 140ms ease;
 }
 
+.board-cell::before {
+  content: '';
+  position: absolute;
+  inset: 0.24rem;
+  z-index: 0;
+  border: 1px solid rgba(93, 232, 255, 0.13);
+  border-radius: 0.25rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.055), transparent 45%),
+    rgba(1, 5, 13, 0.22);
+  pointer-events: none;
+}
+
+.board-cell::after {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  z-index: 0;
+  background:
+    conic-gradient(
+      from 30deg,
+      transparent,
+      rgba(93, 232, 255, 0.13),
+      transparent,
+      rgba(255, 91, 215, 0.12),
+      transparent
+    );
+  opacity: 0;
+  transition: opacity 140ms ease;
+  pointer-events: none;
+}
+
 .board-cell.is-playable:hover {
   transform: translateY(-1px) scale(1.04);
-  border-color: rgba(109, 231, 255, 0.42);
+  border-color: rgba(255, 229, 138, 0.6);
   box-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.3),
-    inset 0 0 0 1px rgba(109, 231, 255, 0.08);
+    0 4px 22px rgba(0, 0, 0, 0.4),
+    0 0 18px rgba(93, 232, 255, 0.18),
+    inset 0 0 0 1px rgba(255, 229, 138, 0.14);
   background:
-    radial-gradient(circle at 30% 20%, rgba(109, 231, 255, 0.07), transparent 55%),
-    rgba(12, 20, 44, 0.95);
+    radial-gradient(circle at 30% 20%, rgba(255, 229, 138, 0.15), transparent 55%),
+    linear-gradient(145deg, rgba(16, 34, 72, 0.98), rgba(4, 11, 27, 0.98));
+}
+
+.board-cell.is-playable:hover::after {
+  opacity: 0.36;
 }
 
 .board-cell.is-owned {
-  border-color: color-mix(in srgb, var(--cell-primary) 55%, transparent);
+  border-color: color-mix(in srgb, var(--cell-primary) 72%, transparent);
   background:
-    radial-gradient(circle at 25% 20%, color-mix(in srgb, var(--cell-light) 55%, transparent), transparent 58%),
+    radial-gradient(circle at 25% 18%, color-mix(in srgb, var(--cell-light) 72%, transparent), transparent 54%),
     linear-gradient(
       145deg,
-      color-mix(in srgb, var(--cell-primary) 22%, #0b1120),
-      color-mix(in srgb, var(--cell-dark) 80%, #050a14)
+      color-mix(in srgb, var(--cell-primary) 34%, #07101e),
+      color-mix(in srgb, var(--cell-dark) 86%, #01050d)
     );
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--cell-light) 28%, transparent),
-    0 0 10px color-mix(in srgb, var(--cell-primary) 10%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--cell-light) 42%, transparent),
+    inset 0 0 18px color-mix(in srgb, var(--cell-primary) 16%, transparent),
+    0 0 14px color-mix(in srgb, var(--cell-primary) 18%, transparent);
 }
 
 .board-cell.is-owned.is-playable:hover {
   border-color: color-mix(in srgb, var(--cell-primary) 85%, white);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--cell-light) 40%, transparent),
-    0 4px 18px color-mix(in srgb, var(--cell-primary) 20%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--cell-light) 48%, transparent),
+    0 4px 22px color-mix(in srgb, var(--cell-primary) 26%, transparent),
+    0 0 24px rgba(255, 229, 138, 0.12);
 }
 
 .board-cell.is-disabled {
@@ -320,6 +401,11 @@ function isExplodingCell(cell: Cell): boolean {
 
 .board-cell.is-exploding {
   animation: cell-explode 220ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  border-color: rgba(255, 229, 138, 0.86);
+  box-shadow:
+    0 0 28px rgba(255, 122, 47, 0.5),
+    0 0 44px rgba(255, 91, 215, 0.24),
+    inset 0 0 22px rgba(255, 229, 138, 0.24);
 }
 
 .load-dots {
@@ -334,12 +420,13 @@ function isExplodingCell(cell: Cell): boolean {
   position: absolute;
   inset: 0.15rem;
   z-index: 1;
-  border-radius: calc(0.7rem - 0.1rem);
+  border-radius: 0.25rem;
   border: 2px solid color-mix(in srgb, var(--last-move-primary) 90%, white);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.2),
-    0 0 14px color-mix(in srgb, var(--last-move-primary) 55%, transparent),
-    inset 0 0 8px color-mix(in srgb, var(--last-move-light) 28%, transparent);
+    0 0 18px color-mix(in srgb, var(--last-move-primary) 64%, transparent),
+    0 0 28px rgba(255, 229, 138, 0.18),
+    inset 0 0 10px color-mix(in srgb, var(--last-move-light) 36%, transparent);
   pointer-events: none;
   animation: last-move-ring-intro 280ms cubic-bezier(0.24, 1.35, 0.38, 1) both;
 }
@@ -348,7 +435,9 @@ function isExplodingCell(cell: Cell): boolean {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.28), transparent 60%);
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.62), rgba(255, 229, 138, 0.36) 18%, rgba(255, 122, 47, 0.24) 34%, transparent 65%),
+    conic-gradient(from 0deg, transparent, rgba(255, 122, 47, 0.8), transparent, rgba(255, 91, 215, 0.54), transparent);
   pointer-events: none;
   animation: burst-fade 260ms ease-out both;
 }
@@ -412,16 +501,25 @@ function isExplodingCell(cell: Cell): boolean {
   .board-grid {
     --board-grid-gap: 0.2rem;
     --board-grid-padding: 0.42rem;
-    border-radius: 1.1rem;
+    border-radius: 0.62rem;
   }
 
   .board-cell {
-    border-radius: 0.5rem;
+    border-radius: 0.32rem;
   }
 
   .last-move-ring {
     inset: 0.14rem;
-    border-radius: calc(0.5rem - 0.1rem);
+    border-radius: 0.22rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-cell,
+  .last-move-ring,
+  .explosion-burst {
+    animation-duration: 1ms;
+    transition-duration: 1ms;
   }
 }
 </style>

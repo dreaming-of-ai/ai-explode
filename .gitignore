@@ -1,5 +1,6 @@
 /frontend/dist/
 /frontend/node_modules/
+**/.DS_Store
 /.idea/
 /.run/Frontend Dev.run.xml
 /.claude/CLAUDE.md

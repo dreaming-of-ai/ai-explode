@@ -130,13 +130,30 @@ function getPlayerRole(player: PlayerConfig): string {
   --active-primary: var(--accent);
   --active-light: rgba(109, 231, 255, 0.34);
   --active-dark: #09111f;
+  position: relative;
   inline-size: 100%;
   overflow: hidden;
   display: grid;
   gap: 0.7rem;
+  border-color: color-mix(in srgb, var(--active-primary) 50%, rgba(255, 255, 255, 0.08));
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--active-light) 48%, transparent), transparent 38%),
-    linear-gradient(150deg, color-mix(in srgb, var(--active-dark) 72%, #09111f), rgba(6, 11, 26, 0.95));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--active-light) 62%, transparent), transparent 38%),
+    radial-gradient(circle at 0 0, rgba(255, 229, 138, 0.16), transparent 42%),
+    linear-gradient(150deg, color-mix(in srgb, var(--active-dark) 78%, #09111f), rgba(4, 10, 24, 0.96));
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.34),
+    0 0 28px color-mix(in srgb, var(--active-primary) 16%, transparent),
+    inset 0 0 22px color-mix(in srgb, var(--active-primary) 7%, transparent);
+}
+
+.turn-card::after {
+  content: '';
+  position: absolute;
+  inset-inline: 1rem;
+  bottom: 0.55rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--active-primary), transparent);
+  opacity: 0.58;
 }
 
 .turn-card.is-concluded {
@@ -149,8 +166,9 @@ function getPlayerRole(player: PlayerConfig): string {
   margin: 0;
   color: var(--accent);
   font-size: 0.78rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0;
   text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(93, 232, 255, 0.18);
 }
 
 h2,
@@ -161,6 +179,9 @@ p {
 
 h2 {
   font-size: clamp(1.4rem, 1.8vw, 2rem);
+  text-shadow:
+    0 0 18px color-mix(in srgb, var(--active-primary) 24%, transparent),
+    0 0 24px rgba(255, 91, 215, 0.08);
 }
 
 h3 {
@@ -180,6 +201,7 @@ h3 {
   align-content: start;
   min-height: 0;
   overflow: hidden;
+  border-color: rgba(93, 232, 255, 0.24);
 }
 
 .score-header {
@@ -201,14 +223,17 @@ h3 {
   --player-primary: var(--accent);
   --player-light: rgba(109, 231, 255, 0.34);
   --player-dark: #143247;
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
   padding: 0.65rem 0.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 0.85rem;
-  background: rgba(7, 12, 28, 0.8);
+  border: 1px solid rgba(93, 232, 255, 0.13);
+  border-radius: 0.5rem;
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.045), rgba(255, 91, 215, 0.035)),
+    rgba(4, 10, 24, 0.82);
   transition:
     border-color 200ms ease,
     box-shadow 200ms ease;
@@ -216,7 +241,12 @@ h3 {
 
 .score-item.is-active {
   border-color: color-mix(in srgb, var(--player-primary) 72%, white);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--player-primary) 40%, transparent);
+  background:
+    radial-gradient(circle at 8% 50%, color-mix(in srgb, var(--player-primary) 26%, transparent), transparent 42%),
+    linear-gradient(135deg, color-mix(in srgb, var(--player-primary) 14%, rgba(4, 10, 24, 0.88)), rgba(4, 10, 24, 0.9));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--player-primary) 42%, transparent),
+    0 0 18px color-mix(in srgb, var(--player-primary) 16%, transparent);
 }
 
 .score-item.is-erased {
@@ -228,6 +258,7 @@ h3 {
   border-color: color-mix(in srgb, var(--player-primary) 82%, white);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--player-primary) 45%, transparent),
+    0 0 24px color-mix(in srgb, var(--player-primary) 18%, transparent),
     inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
@@ -259,11 +290,17 @@ h3 {
   place-items: center;
   width: 2.35rem;
   height: 2.35rem;
-  border-radius: 0.85rem;
-  background: linear-gradient(160deg, var(--player-primary), var(--player-dark));
+  border: 1px solid color-mix(in srgb, var(--player-light) 64%, transparent);
+  border-radius: 0.45rem;
+  background:
+    radial-gradient(circle at 34% 24%, var(--player-light), transparent 52%),
+    linear-gradient(160deg, var(--player-primary), var(--player-dark));
   color: #f6fbff;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 800;
+  box-shadow:
+    0 0 16px color-mix(in srgb, var(--player-primary) 22%, transparent),
+    inset 0 0 10px rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 }
 

@@ -10,18 +10,31 @@
   font-weight: 400;
   color: #f4f7ff;
   background:
-    radial-gradient(circle at top, rgba(57, 97, 174, 0.32), transparent 28%),
-    radial-gradient(circle at 20% 20%, rgba(233, 196, 106, 0.15), transparent 24%),
-    linear-gradient(180deg, #050915 0%, #090f20 42%, #050814 100%);
+    radial-gradient(circle at 72% 12%, rgba(123, 62, 255, 0.32), transparent 18rem),
+    radial-gradient(circle at 13% 24%, rgba(0, 189, 255, 0.24), transparent 19rem),
+    radial-gradient(circle at 83% 70%, rgba(255, 80, 186, 0.22), transparent 18rem),
+    radial-gradient(circle at 48% 88%, rgba(255, 103, 24, 0.16), transparent 16rem),
+    linear-gradient(180deg, #01040d 0%, #05071a 43%, #02030a 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   --text-main: #f4f7ff;
-  --text-soft: #b5c0dc;
+  --text-soft: #b8d7ff;
   --accent: #6de7ff;
-  --panel-bg: rgba(8, 13, 29, 0.84);
-  --panel-border: rgba(255, 255, 255, 0.08);
+  --neon-cyan: #5de8ff;
+  --neon-blue: #2788ff;
+  --neon-orange: #ff7a2f;
+  --neon-gold: #ffe58a;
+  --neon-magenta: #ff5bd7;
+  --neon-violet: #915cff;
+  --space-void: #02040d;
+  --space-panel: rgba(4, 10, 24, 0.84);
+  --space-panel-strong: rgba(5, 12, 30, 0.94);
+  --panel-bg: rgba(4, 10, 24, 0.82);
+  --panel-border: rgba(93, 232, 255, 0.24);
+  --panel-border-hot: rgba(255, 91, 215, 0.22);
+  --panel-shadow: rgba(0, 0, 0, 0.48);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -50,10 +63,31 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 30px 30px;
-  mask-image: radial-gradient(circle at center, black, transparent 78%);
+    linear-gradient(rgba(93, 232, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(93, 232, 255, 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(circle at center, black, transparent 76%);
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.78) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(93, 232, 255, 0.62) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(255, 91, 215, 0.56) 0 1px, transparent 1.5px);
+  background-position:
+    8% 16%,
+    72% 9%,
+    88% 61%;
+  background-size:
+    190px 170px,
+    260px 230px,
+    310px 270px;
+  opacity: 0.46;
+  mask-image: radial-gradient(circle at center, black, transparent 82%);
 }
 
 button,
@@ -63,7 +97,7 @@ input {
 
 button:focus-visible,
 input:focus-visible {
-  outline: 2px solid rgba(109, 231, 255, 0.5);
+  outline: 2px solid rgba(255, 229, 138, 0.72);
   outline-offset: 2px;
 }
 
@@ -81,13 +115,17 @@ input:focus-visible {
 .panel {
   padding: clamp(1rem, 1.4vw, 1.35rem);
   border: 1px solid var(--panel-border);
-  border-radius: 1.35rem;
+  border-radius: 0.65rem;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+    linear-gradient(135deg, rgba(93, 232, 255, 0.1), transparent 28%),
+    linear-gradient(315deg, rgba(255, 91, 215, 0.09), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
     var(--panel-bg);
   box-shadow:
-    0 22px 60px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 22px 64px var(--panel-shadow),
+    0 0 28px rgba(93, 232, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 26px rgba(39, 136, 255, 0.05);
   backdrop-filter: blur(18px);
 }
 
@@ -97,13 +135,13 @@ input:focus-visible {
   }
 
   .panel {
-    border-radius: 1.15rem;
+    border-radius: 0.6rem;
   }
 }
 
 @media (max-width: 720px), (max-height: 520px) {
   .panel {
     padding: clamp(0.75rem, 1.8vw, 1rem);
-    border-radius: 1rem;
+    border-radius: 0.55rem;
   }
 }

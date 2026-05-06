@@ -50,9 +50,11 @@ const emit = defineEmits<{
 
 .result-item {
   padding: 0.95rem 1rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(7, 12, 28, 0.8);
+  border-radius: 0.55rem;
+  border: 1px solid rgba(93, 232, 255, 0.18);
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.06), rgba(255, 91, 215, 0.04)),
+    rgba(4, 10, 24, 0.82);
   color: var(--text-main);
   line-height: 1.55;
 }
@@ -64,13 +66,16 @@ const emit = defineEmits<{
 
 .primary-button {
   padding: 0.95rem 1.35rem;
-  border: none;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #6de7ff, #8bffd4);
+  border: 1px solid rgba(255, 122, 47, 0.5);
+  border-radius: 0.5rem;
+  background:
+    radial-gradient(circle at 22% 20%, rgba(255, 229, 138, 0.3), transparent 42%),
+    linear-gradient(135deg, var(--neon-orange), var(--neon-magenta));
   color: #06101d;
   font: inherit;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 0 24px rgba(255, 122, 47, 0.16);
   transition:
     transform 160ms ease,
     opacity 160ms ease,

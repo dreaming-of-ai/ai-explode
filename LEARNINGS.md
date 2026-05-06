@@ -58,3 +58,11 @@
 - The square board is easier to keep inside a responsive shell when its size is derived from the actual board container, not from guessed viewport subtractions. `container-type: size` plus container query units in `frontend/src/components/GameBoard.vue` keeps the board legible across rotation without adding JavaScript viewport bookkeeping.
 - Mobile secondary information should stay in a collapsible region that can scroll independently of the board shell. Keeping the `New Game` action and turn context outside that collapsed region in `frontend/src/components/PlayerSidebar.vue` prevents the scoreboard or overview copy from stealing the board's minimum space budget.
 - The responsive design reference matters more than local compaction tricks when a breakpoint still feels unstable. In this shell, phone support became much more reliable once the layout followed `papers/screen-layout.md` directly: hide the full sidebar on phones, keep only compact primary actions under the board, and move secondary game info into the shared popup flow instead of squeezing it into the default phone layout.
+
+## 2026-05-05 Splash Entry Screen
+
+- One-time, per-page-load entry screens that do not affect game rules or modal orchestration can live as local state in `frontend/src/App.vue`. Keeping that state outside `frontend/src/composables/useGameShell.ts` avoids mixing onboarding presentation with authoritative game shell behavior.
+
+## 2026-05-05 Splash-Aligned Game Theme
+
+- Visual theme alignment for the game shell works best as shared CSS tokens in `frontend/src/styles.css` plus scoped component styling. Keeping the neon/glass treatment in CSS preserves the existing Vue game-state contracts while letting board cells, panels, modals, and mobile controls share one look.

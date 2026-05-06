@@ -199,8 +199,10 @@ onUnmounted(() => {
     max(1rem, calc(var(--safe-right) + 0.5rem))
     max(1rem, calc(var(--safe-bottom) + 0.5rem))
     max(1rem, calc(var(--safe-left) + 0.5rem));
-  background: rgba(4, 7, 16, 0.72);
-  backdrop-filter: blur(16px);
+  background:
+    radial-gradient(circle at 50% 24%, rgba(93, 232, 255, 0.12), transparent 38%),
+    rgba(1, 3, 10, 0.78);
+  backdrop-filter: blur(18px) saturate(1.15);
 }
 
 .modal-panel {
@@ -210,6 +212,12 @@ onUnmounted(() => {
   grid-template-rows: auto minmax(0, 1fr);
   gap: 1rem;
   overflow: hidden;
+  border-color: rgba(93, 232, 255, 0.3);
+  box-shadow:
+    0 26px 78px rgba(0, 0, 0, 0.56),
+    0 0 42px rgba(93, 232, 255, 0.12),
+    0 0 54px rgba(255, 91, 215, 0.08),
+    inset 0 0 28px rgba(39, 136, 255, 0.06);
 }
 
 .modal-header {
@@ -228,8 +236,9 @@ onUnmounted(() => {
   margin: 0;
   color: var(--accent);
   font-size: 0.78rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0;
   text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(93, 232, 255, 0.18);
 }
 
 h2,
@@ -249,12 +258,25 @@ h2 {
 .close-button {
   width: 2.5rem;
   height: 2.5rem;
-  border: none;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(93, 232, 255, 0.22);
+  border-radius: 0.45rem;
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.1), rgba(255, 91, 215, 0.07)),
+    rgba(5, 12, 30, 0.9);
   color: var(--text-main);
   font-size: 1.35rem;
   cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.close-button:hover,
+.close-button:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(255, 229, 138, 0.58);
+  box-shadow: 0 0 22px rgba(255, 122, 47, 0.14);
 }
 
 .modal-content {

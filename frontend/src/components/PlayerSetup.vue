@@ -242,6 +242,7 @@ const cards = computed(() =>
   gap: 1.25rem;
   min-height: 0;
   overflow: hidden;
+  border-color: rgba(93, 232, 255, 0.24);
 }
 
 .section-header {
@@ -253,8 +254,9 @@ const cards = computed(() =>
   margin: 0;
   color: var(--accent);
   font-size: 0.78rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0;
   text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(93, 232, 255, 0.18);
 }
 
 h3 {
@@ -276,11 +278,12 @@ h3 {
   display: grid;
   gap: 0.65rem;
   padding: 0.9rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
+  border: 1px solid rgba(93, 232, 255, 0.16);
+  border-radius: 0.55rem;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
-    rgba(6, 10, 25, 0.78);
+    linear-gradient(135deg, rgba(93, 232, 255, 0.065), rgba(255, 91, 215, 0.04)),
+    rgba(4, 10, 24, 0.82);
+  box-shadow: inset 0 0 18px rgba(93, 232, 255, 0.035);
 }
 
 .player-card__top {
@@ -295,11 +298,15 @@ h3 {
   flex-shrink: 0;
   width: 1.9rem;
   height: 1.9rem;
-  border-radius: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.42rem;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 800;
   color: #f6fbff;
-  background: linear-gradient(135deg, rgba(109, 231, 255, 0.6), rgba(20, 50, 71, 0.95));
+  background:
+    radial-gradient(circle at 32% 20%, rgba(255, 229, 138, 0.42), transparent 46%),
+    linear-gradient(135deg, rgba(109, 231, 255, 0.72), rgba(20, 50, 71, 0.95));
+  box-shadow: 0 0 16px rgba(93, 232, 255, 0.18);
 }
 
 .controller-toggle.compact {
@@ -321,9 +328,11 @@ h3 {
 
 .controller-button {
   padding: 0.5rem 0.65rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
-  background: rgba(10, 16, 35, 0.88);
+  border: 1px solid rgba(93, 232, 255, 0.16);
+  border-radius: 0.45rem;
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.055), rgba(10, 16, 35, 0.88)),
+    rgba(10, 16, 35, 0.88);
   color: var(--text-main);
   font: inherit;
   cursor: pointer;
@@ -335,12 +344,15 @@ h3 {
 
 .controller-button:hover {
   transform: translateY(-1px);
-  border-color: rgba(109, 231, 255, 0.34);
+  border-color: rgba(255, 229, 138, 0.46);
 }
 
 .controller-button.is-selected {
-  border-color: rgba(109, 231, 255, 0.52);
-  background: linear-gradient(135deg, rgba(31, 54, 94, 0.92), rgba(9, 16, 36, 0.96));
+  border-color: rgba(255, 122, 47, 0.58);
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255, 229, 138, 0.22), transparent 44%),
+    linear-gradient(135deg, rgba(255, 122, 47, 0.24), rgba(9, 16, 36, 0.96));
+  box-shadow: 0 0 18px rgba(255, 122, 47, 0.12);
 }
 
 .remove-btn {
@@ -361,16 +373,18 @@ h3 {
 .name-input,
 .generated-name {
   padding: 0.65rem 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.75rem;
-  background: rgba(9, 16, 36, 0.75);
+  border: 1px solid rgba(93, 232, 255, 0.16);
+  border-radius: 0.45rem;
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.04), rgba(9, 16, 36, 0.75)),
+    rgba(9, 16, 36, 0.75);
   color: var(--text-main);
   font: inherit;
   width: 100%;
 }
 
 .name-input:focus {
-  outline: 2px solid rgba(109, 231, 255, 0.4);
+  outline: 2px solid rgba(255, 229, 138, 0.56);
   outline-offset: 1px;
 }
 
@@ -396,7 +410,7 @@ h3 {
   --chip-dark: #143247;
   width: 1.5rem;
   height: 1.5rem;
-  border-radius: 999px;
+  border-radius: 0.4rem;
   flex-shrink: 0;
   border: 2px solid transparent;
   background: radial-gradient(circle at 35% 30%, var(--chip-light), var(--chip-primary) 55%, var(--chip-dark));
@@ -413,8 +427,10 @@ h3 {
 }
 
 .color-dot.is-selected {
-  border-color: white;
-  box-shadow: 0 0 0 2px var(--chip-primary);
+  border-color: #fff8df;
+  box-shadow:
+    0 0 0 2px var(--chip-primary),
+    0 0 16px color-mix(in srgb, var(--chip-primary) 34%, transparent);
 }
 
 .setup-actions {
@@ -428,8 +444,8 @@ h3 {
 .primary-button,
 .secondary-button,
 .ghost-button {
-  border: none;
-  border-radius: 999px;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
   font: inherit;
   cursor: pointer;
   transition:
@@ -444,21 +460,27 @@ h3 {
 }
 
 .primary-button {
-  background: linear-gradient(135deg, #6de7ff, #8bffd4);
+  border-color: rgba(255, 122, 47, 0.5);
+  background:
+    radial-gradient(circle at 22% 20%, rgba(255, 229, 138, 0.3), transparent 42%),
+    linear-gradient(135deg, var(--neon-orange), var(--neon-magenta));
   color: #06101d;
-  font-weight: 700;
+  font-weight: 800;
+  box-shadow: 0 0 24px rgba(255, 122, 47, 0.16);
 }
 
 .secondary-button {
-  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(93, 232, 255, 0.2);
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.1), rgba(5, 12, 30, 0.86));
   color: var(--text-main);
 }
 
 .ghost-button {
   padding: 0.4rem 0.55rem;
-  background: transparent;
+  background: rgba(93, 232, 255, 0.04);
   color: var(--text-soft);
-  border-radius: 0.5rem;
+  border-color: rgba(93, 232, 255, 0.12);
 }
 
 .primary-button:hover:not(:disabled),

@@ -83,11 +83,16 @@ const ICON_PATHS: Record<HeaderPopupId, readonly string[]> = {
   block-size: 2.65rem;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(93, 232, 255, 0.22);
+  border-radius: 0.5rem;
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.08), rgba(255, 91, 215, 0.06)),
+    rgba(4, 10, 24, 0.72);
   color: var(--text-soft);
   cursor: pointer;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.035),
+    0 0 20px rgba(93, 232, 255, 0.06);
   transition:
     transform 160ms ease,
     color 160ms ease,
@@ -100,9 +105,13 @@ const ICON_PATHS: Record<HeaderPopupId, readonly string[]> = {
 .header-icon-button:focus-visible {
   transform: translateY(-1px);
   color: var(--text-main);
-  border-color: rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+  border-color: rgba(255, 229, 138, 0.58);
+  background:
+    linear-gradient(135deg, rgba(255, 122, 47, 0.18), rgba(93, 232, 255, 0.12)),
+    rgba(5, 12, 30, 0.9);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.26),
+    0 0 22px rgba(255, 122, 47, 0.12);
 }
 
 .header-icon-button:hover .header-icon-tooltip,
@@ -112,9 +121,15 @@ const ICON_PATHS: Record<HeaderPopupId, readonly string[]> = {
 }
 
 .header-icon-button.is-active {
-  color: var(--accent);
-  border-color: rgba(109, 231, 255, 0.3);
-  background: rgba(109, 231, 255, 0.08);
+  color: #fff8df;
+  border-color: rgba(255, 122, 47, 0.6);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 229, 138, 0.22), transparent 48%),
+    linear-gradient(135deg, rgba(255, 122, 47, 0.22), rgba(255, 91, 215, 0.13)),
+    rgba(5, 12, 30, 0.92);
+  box-shadow:
+    0 0 24px rgba(255, 122, 47, 0.16),
+    inset 0 0 16px rgba(255, 229, 138, 0.06);
 }
 
 .header-icon-tooltip {
@@ -123,9 +138,9 @@ const ICON_PATHS: Record<HeaderPopupId, readonly string[]> = {
   left: 50%;
   z-index: 1;
   padding: 0.35rem 0.6rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  background: rgba(6, 11, 26, 0.96);
+  border: 1px solid rgba(93, 232, 255, 0.24);
+  border-radius: 0.45rem;
+  background: rgba(4, 10, 24, 0.98);
   color: var(--text-main);
   font-size: 0.78rem;
   line-height: 1.2;
@@ -136,7 +151,9 @@ const ICON_PATHS: Record<HeaderPopupId, readonly string[]> = {
   transition:
     opacity 140ms ease,
     transform 140ms ease;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.28),
+    0 0 18px rgba(93, 232, 255, 0.1);
 }
 
 svg {
@@ -173,6 +190,12 @@ svg {
   svg {
     inline-size: 1.05rem;
     block-size: 1.05rem;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .header-icon-button:hover {
+    transform: none;
   }
 }
 </style>

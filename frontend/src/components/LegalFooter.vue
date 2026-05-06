@@ -55,7 +55,8 @@ const emit = defineEmits<{
   flex-wrap: wrap;
   gap: 0.5rem;
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.42);
+  color: rgba(184, 215, 255, 0.62);
+  text-shadow: 0 0 12px rgba(93, 232, 255, 0.08);
 }
 
 .legal-footer__separator {
@@ -73,7 +74,7 @@ const emit = defineEmits<{
 }
 
 .legal-footer__link:hover {
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 229, 138, 0.9);
 }
 
 @media (max-width: 720px), (max-height: 520px) {

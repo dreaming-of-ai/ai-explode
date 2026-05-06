@@ -76,6 +76,7 @@ const statusText = computed(() => {
 .mobile-shell-bar {
   display: none;
   gap: 0.7rem;
+  border-color: rgba(93, 232, 255, 0.3);
 }
 
 .mobile-shell-bar__actions {
@@ -87,22 +88,41 @@ const statusText = computed(() => {
 .mobile-shell-bar__button {
   min-block-size: 2.85rem;
   padding: 0.75rem 0.95rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.95rem;
+  border: 1px solid rgba(93, 232, 255, 0.2);
+  border-radius: 0.5rem;
   font: inherit;
+  font-weight: 750;
   cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease;
 }
 
 .mobile-shell-bar__button--primary {
-  background: linear-gradient(135deg, rgba(20, 33, 63, 0.96), rgba(8, 14, 30, 0.92));
-  border-color: rgba(109, 231, 255, 0.24);
-  color: var(--text-main);
-  font-weight: 700;
+  background:
+    radial-gradient(circle at 22% 20%, rgba(255, 229, 138, 0.26), transparent 44%),
+    linear-gradient(135deg, rgba(255, 122, 47, 0.35), rgba(255, 91, 215, 0.16) 48%, rgba(5, 12, 30, 0.96));
+  border-color: rgba(255, 122, 47, 0.46);
+  color: #fff8df;
+  box-shadow: 0 0 22px rgba(255, 122, 47, 0.12);
 }
 
 .mobile-shell-bar__button--secondary {
-  background: rgba(255, 255, 255, 0.05);
+  background:
+    linear-gradient(135deg, rgba(93, 232, 255, 0.12), rgba(5, 12, 30, 0.9));
   color: var(--text-main);
+}
+
+.mobile-shell-bar__button:hover,
+.mobile-shell-bar__button:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(255, 229, 138, 0.62);
+  filter: brightness(1.06);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.26),
+    0 0 24px rgba(93, 232, 255, 0.14);
 }
 
 .mobile-shell-bar__status {
@@ -118,8 +138,9 @@ const statusText = computed(() => {
 .eyebrow {
   color: var(--accent);
   font-size: 0.72rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0;
   text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(93, 232, 255, 0.18);
 }
 
 .mobile-shell-bar__status-text {
@@ -146,6 +167,13 @@ const statusText = computed(() => {
 
   .mobile-shell-bar__status-text {
     font-size: 0.78rem;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .mobile-shell-bar__button:hover {
+    transform: none;
+    filter: none;
   }
 }
 </style>

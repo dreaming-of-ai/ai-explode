@@ -32,9 +32,9 @@ npm run dev
 
 ## Implementation
 
-Implementation is done using **Codex** with **GPT-5.4 Medium** to **GPT-5.4 Extra High** depending on the complexity 
+Implementation is done using **Codex** with **GPT** with depending on the complexity
 of the task at hand.
-The implementation workflow is structured around specifications and implementation plans, which are created using the 
+The implementation workflow is structured around specifications and implementation plans, which are created using the
 corresponding skills defined.
 The actual implementation is then done using the implementation execution skill, which ensures that changes are made 
 in a controlled way and that the codebase remains stable.
@@ -43,7 +43,7 @@ standards.
 
 ## Testing (Black Box)
 
-End-to-end tests are implemented using **Claude Opus 4.6** and the corresponding agents in the testing project.
+End-to-end tests are implemented using **Claude Opus** and the corresponding agents in the testing project.
 The first agent creates _Gherkin_ test features from a simple textual description and the specifications.
 The second agent creates _Playwright_ tests that can be easily executed.
 
